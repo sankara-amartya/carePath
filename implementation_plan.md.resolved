@@ -1,0 +1,68 @@
+# Implement CarePath Design System
+
+The goal of this task is to implement the **CarePath Design System** as defined in the provided `carepath_design_doc.html` into a new project structure. We will set up a modern frontend workspace handling both web and mobile experiences, while strictly adhering to the "warm, trust, and calm" design philosophy.
+
+## User Review Required
+
+> [!IMPORTANT]  
+> Please review the technology choices before we begin scaffolding the project. 
+> 
+> 1. **Styling Approach:** The design doc is written in pure CSS. Following the standard guidelines, I recommend using **Vanilla CSS (CSS Modules or global CSS variables)** for the web dashboard to adhere strictly to the precise visual requirements.
+> 2. **Project Structure:** We will create two separate projects side-by-side in `c:\carepath`:
+>    - `web`: A Next.js project for the dashboard.
+>    - `mobile`: A React Native Expo project for the mobile app.
+
+## Proposed Steps & Implementation
+
+### Phase 1: Workspace Initialization
+We will initialize the basic scaffolding for both applications.
+- **Web App (`c:\carepath\web`)**: Next.js App Router setup using Vanilla CSS for styling.
+- **Mobile App (`c:\carepath\mobile`)**: Expo setup using React Native `StyleSheet` and a shared theme provider.
+
+### Phase 2: Design Tokens & Typography
+Translate the CSS root variables and font imports into reusable systems for both platforms.
+
+#### Web App
+- Update `globals.css` with the CSS custom properties:
+  - Colors: `--ink`, `--ink2`, `--sage`, `--sage-light`, `--mint`, `--cream`, `--warm`, `--gold`, `--text-on-dark`, `--muted`
+  - Typography: `DM Serif Display` and `DM Sans` from Google Fonts.
+  - Border Radii: `--radius`, `--radius-sm`
+
+#### Mobile App
+- Create a `theme.ts` file exporting constants for colors, font families, and spacing to be used across the app's `StyleSheet` definitions.
+- Configure `expo-font` to load `DM Serif Display` and `DM Sans`.
+
+### Phase 3: Component Library Creation
+Build reusable UI components showcasing the calm and warm principles.
+- **Buttons**: Primary (Sage-Light), Ghost/Outline, AI-specific (Mint/Gold).
+- **Cards**: Feature cards, Metric/Stat cards with correct icons.
+- **Inputs & Sliders**: Form fields and health sliders.
+- **Badges**: Status tags (Taken, Due soon, Missed, etc.)
+
+### Phase 4: Screen Implementations
+Implement the core flows defined in the design document.
+
+#### Mobile Flow (Primary Focus)
+- **Dashboard**: The home screen displaying current health scores, medication due items, and activity lists.
+- **Medication Log**: The interface to confirm dosage taken, incorporating AI verification styles.
+- **Health Check-In**: A form containing real-time health sliders for Pain, Mood, Appetite, and Mobility.
+
+#### Web Flow (Dashboard)
+- Layout structure accommodating different roles (Primary Caregiver, Secondary Caregiver, Doctor, Patient, Agency Admin).
+- Interactive motion logic for the AI summaries and health check-ins.
+
+## Open Questions
+
+> [!CAUTION]
+> 1. Could you confirm if you want to use **NativeWind/Tailwind** or stick strictly to vanilla React Native StyleSheets (`theme.ts`) and vanilla CSS for Next.js? (Your previous configurations favored Tailwind and NativeWind, but AI pure-CSS implementations are very robust).
+> 2. Would you like us to proceed with scaffolding both `web` and `mobile` right away, or should we focus on just one platform (e.g., the mobile app screens) initially?
+
+## Verification Plan
+
+### Automated / Build Verification
+- Run `npm run dev` in Next.js to ensure web interface compiles correctly.
+- Run `npx expo start` to verify the mobile application runs without errors and fonts load properly.
+
+### Visual Verification
+- Compare implemented UI components step-by-step against the semantic usage rules detailed in `carepath_design_doc.html`.
+- Test motion animations (spring bounces, easy-out transitions) on both platforms to ensure they meet the 280ms criteria and feel "calm".

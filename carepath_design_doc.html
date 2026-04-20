@@ -1,0 +1,615 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0F1A14;
+  --ink2:#1C2E22;
+  --sage:#1D6A45;
+  --sage-light:#2A9060;
+  --mint:#5DCAA5;
+  --cream:#F5EFE6;
+  --warm:#E8D5B0;
+  --gold:#C9943A;
+  --text-on-dark:#E8F0E9;
+  --muted:#7A9480;
+  --radius:16px;
+  --radius-sm:10px;
+}
+
+.root{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--text-on-dark);padding-bottom:3rem}
+
+/* ── SECTION UTILITY ── */
+.sec{padding:2.5rem 1.5rem;border-bottom:0.5px solid rgba(255,255,255,0.06)}
+.sec-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mint);margin-bottom:1rem}
+.sec-title{font-family:'DM Serif Display',serif;font-size:24px;color:var(--text-on-dark);line-height:1.2;margin-bottom:.5rem}
+.sec-sub{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:1.5rem}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(160deg,#0D1F17 0%,#142A1E 60%,#0F1A14 100%);padding:2.5rem 1.5rem 2rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(93,202,165,.10) 0%,transparent 70%)}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(93,202,165,.12);border:0.5px solid rgba(93,202,165,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--mint);margin-bottom:1.25rem}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--mint)}
+.hero-title{font-family:'DM Serif Display',serif;font-size:36px;line-height:1.1;color:#fff;margin-bottom:.75rem}
+.hero-title em{font-style:italic;color:var(--mint)}
+.hero-sub{font-size:14px;color:var(--muted);line-height:1.6;max-width:340px;margin-bottom:1.75rem}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--sage-light);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:11px 22px;border-radius:28px;border:none;cursor:pointer;transition:background .2s}
+.btn-primary:hover{background:var(--mint)}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);color:var(--text-on-dark);font-size:13px;font-weight:500;padding:11px 20px;border-radius:28px;border:0.5px solid rgba(255,255,255,.12);cursor:pointer;margin-left:10px}
+.hero-btns{display:flex;flex-wrap:wrap;gap:10px}
+
+/* ── PALETTE ── */
+.swatch-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem}
+.swatch{border-radius:var(--radius-sm);padding:.75rem .875rem;flex:1;min-width:80px}
+.sw-name{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.7;margin-bottom:2px}
+.sw-hex{font-family:'DM Sans',monospace;font-size:12px;font-weight:500}
+
+/* ── TYPE SPECIMENS ── */
+.type-row{margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:0.5px solid rgba(255,255,255,.06)}
+.type-row:last-child{border-bottom:none;margin-bottom:0}
+.type-meta{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+
+/* ── COMPONENTS ── */
+.comp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:1rem}
+.comp-card{background:var(--ink2);border:0.5px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:1.125rem 1rem}
+.comp-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
+
+/* ── BUTTONS SHOWCASE ── */
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.b1{background:var(--sage-light);color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:24px;border:none;cursor:pointer}
+.b2{background:transparent;color:var(--text-on-dark);font-size:13px;font-weight:500;padding:9px 20px;border-radius:24px;border:0.5px solid rgba(255,255,255,.2);cursor:pointer}
+.b3{background:rgba(93,202,165,.12);color:var(--mint);font-size:13px;font-weight:500;padding:9px 20px;border-radius:24px;border:0.5px solid rgba(93,202,165,.25);cursor:pointer}
+.b4{background:rgba(201,148,58,.14);color:var(--gold);font-size:13px;font-weight:500;padding:9px 20px;border-radius:24px;border:0.5px solid rgba(201,148,58,.3);cursor:pointer}
+
+/* ── INPUT ── */
+.inp{width:100%;background:rgba(255,255,255,.05);border:0.5px solid rgba(255,255,255,.12);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text-on-dark);font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:8px}
+.inp::placeholder{color:var(--muted)}
+.inp:focus{outline:none;border-color:var(--mint)}
+
+/* ── SLIDER ── */
+.slider-wrap{margin-bottom:6px}
+.slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.track{height:4px;background:rgba(255,255,255,.1);border-radius:4px;position:relative;margin-bottom:8px}
+.fill{height:4px;background:var(--sage-light);border-radius:4px}
+.thumb{width:16px;height:16px;background:var(--mint);border-radius:50%;position:absolute;top:-6px;right:0;border:2px solid var(--ink)}
+
+/* ── TAG / BADGE ── */
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.badge-mint{background:rgba(93,202,165,.15);color:var(--mint);border:0.5px solid rgba(93,202,165,.3)}
+.badge-gold{background:rgba(201,148,58,.15);color:var(--gold);border:0.5px solid rgba(201,148,58,.3)}
+.badge-red{background:rgba(220,80,80,.12);color:#E07070;border:0.5px solid rgba(220,80,80,.25)}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--muted);border:0.5px solid rgba(255,255,255,.1)}
+
+/* ── CARD VARIANTS ── */
+.card-feat{background:var(--ink2);border:0.5px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:1.25rem}
+.card-feat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:.875rem}
+.card-feat-title{font-size:14px;font-weight:500;color:var(--text-on-dark);margin-bottom:5px}
+.card-feat-desc{font-size:12px;color:var(--muted);line-height:1.55}
+
+.card-stat{background:rgba(93,202,165,.07);border:0.5px solid rgba(93,202,165,.15);border-radius:var(--radius-sm);padding:1rem;text-align:center}
+.stat-val{font-family:'DM Serif Display',serif;font-size:28px;color:var(--mint);line-height:1}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── PHONE MOCKUP ── */
+.phone-wrap{display:flex;justify-content:center;gap:16px;margin-bottom:1rem;padding:0 .5rem}
+.phone{width:130px;background:#0A1510;border:1.5px solid rgba(255,255,255,.12);border-radius:22px;overflow:hidden;flex-shrink:0}
+.phone-notch{height:20px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center}
+.notch-pill{width:40px;height:5px;background:rgba(255,255,255,.15);border-radius:4px}
+.phone-screen{padding:.5rem}
+.ps-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.ps-greeting{font-size:8px;font-weight:600;color:var(--text-on-dark)}
+.ps-avi{width:18px;height:18px;border-radius:50%;background:var(--sage)}
+.ps-card{background:rgba(93,202,165,.12);border-radius:8px;padding:.4rem .5rem;margin-bottom:.375rem}
+.ps-card-label{font-size:6px;color:var(--muted);margin-bottom:2px}
+.ps-card-val{font-size:11px;font-weight:600;color:var(--mint)}
+.ps-row{display:flex;gap:4px;margin-bottom:.375rem}
+.ps-mini{flex:1;background:rgba(255,255,255,.04);border-radius:6px;padding:.35rem .4rem}
+.ps-mini-label{font-size:5px;color:var(--muted);margin-bottom:2px}
+.ps-mini-val{font-size:8px;font-weight:600;color:var(--text-on-dark)}
+.ps-list-item{display:flex;align-items:center;gap:5px;padding:.25rem 0;border-bottom:0.5px solid rgba(255,255,255,.05)}
+.ps-dot{width:5px;height:5px;border-radius:50%}
+.ps-item-text{font-size:6px;color:var(--muted)}
+.ps-item-badge{font-size:5px;margin-left:auto;padding:1px 5px;border-radius:10px}
+
+.phone2 .ps-card{background:rgba(201,148,58,.1)}
+.phone2 .ps-card-val{color:var(--gold)}
+
+/* ── SPACING ── */
+.sp{height:1px;background:rgba(255,255,255,.06);margin:0 1.5rem}
+
+/* ── SCREEN FLOW ── */
+.flow-screens{display:flex;gap:10px;overflow-x:auto;padding:.5rem 0 1rem;margin-bottom:.5rem}
+.flow-screen{flex-shrink:0;width:110px;background:var(--ink2);border:0.5px solid rgba(255,255,255,.1);border-radius:14px;padding:.5rem;text-align:center}
+.fs-name{font-size:9px;font-weight:500;color:var(--text-on-dark);margin-bottom:.25rem}
+.fs-role{font-size:8px;color:var(--muted)}
+.fs-bar{height:3px;border-radius:2px;margin-bottom:.375rem}
+.fs-block{height:16px;background:rgba(255,255,255,.05);border-radius:4px;margin-bottom:4px}
+.fs-block.accent{background:rgba(93,202,165,.15)}
+.fs-block.sm{height:10px}
+.fs-row2{display:flex;gap:3px;margin-bottom:4px}
+.fs-half{flex:1;height:22px;background:rgba(255,255,255,.05);border-radius:4px}
+.fs-half.a{background:rgba(93,202,165,.1)}
+
+/* ── ICONOGRAPHY ── */
+.icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+.icon-item{background:var(--ink2);border-radius:var(--radius-sm);padding:.75rem .5rem;text-align:center}
+.icon-shape{width:32px;height:32px;border-radius:8px;margin:0 auto .4rem;display:flex;align-items:center;justify-content:center}
+.icon-label{font-size:9px;color:var(--muted)}
+
+/* ── TONE ── */
+.tone-card{background:var(--ink2);border-left:2px solid var(--mint);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.75rem 1rem;margin-bottom:8px}
+.tone-title{font-size:12px;font-weight:500;color:var(--text-on-dark);margin-bottom:3px}
+.tone-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+.avoid-card{background:var(--ink2);border-left:2px solid rgba(220,80,80,.4);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:.75rem 1rem;margin-bottom:8px}
+
+/* ── MOTION ── */
+.motion-row{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.motion-item{background:var(--ink2);border-radius:var(--radius-sm);padding:.75rem 1rem;display:flex;align-items:flex-start;gap:.75rem}
+.motion-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.motion-title{font-size:12px;font-weight:500;color:var(--text-on-dark);margin-bottom:2px}
+.motion-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* ── CTA STRIP ── */
+.cta-strip{background:linear-gradient(135deg,#142A1E,#1C3828);border:0.5px solid rgba(93,202,165,.15);border-radius:var(--radius);padding:1.5rem;margin:1.5rem;text-align:center}
+.cta-strip h3{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;margin-bottom:.5rem}
+.cta-strip p{font-size:13px;color:var(--muted);margin-bottom:1.25rem}
+.cta-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+</style>
+
+<div class="root">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag"><div class="hero-dot"></div>Design system v1.0</div>
+  <h1 class="hero-title">CarePath<br><em>Design Document</em></h1>
+  <p class="hero-sub">Visual language, component library, and UX principles for the CarePath elder care platform — inspired by warmth, trust, and calm clarity.</p>
+  <div class="hero-btns">
+    <button class="btn-primary">Brand identity</button>
+    <button class="btn-ghost">Components</button>
+  </div>
+</div>
+
+<!-- BRAND STORY -->
+<div class="sec">
+  <div class="sec-label">Design philosophy</div>
+  <div class="sec-title">Care feels different here</div>
+  <p class="sec-sub">CarePath is used in moments of stress, exhaustion, and worry. Every design decision must answer: does this reduce cognitive load? Does it feel like a steady hand? The visual language borrows from Clearmind's warmth — deep, calming backgrounds, generous whitespace, soft rounded forms — and shifts the palette from purple/therapy to forest green/trust.</p>
+
+  <div class="comp-grid">
+    <div class="tone-card">
+      <div class="tone-title">Calm authority</div>
+      <div class="tone-desc">Like a nurse who's seen everything — confident, unhurried, never alarming unless truly necessary.</div>
+    </div>
+    <div class="tone-card">
+      <div class="tone-title">Family warmth</div>
+      <div class="tone-desc">This is about people who love each other. Copy, colors, and flow should feel human, not clinical.</div>
+    </div>
+    <div class="tone-card" style="border-color:var(--gold)">
+      <div class="tone-title">Effortless clarity</div>
+      <div class="tone-desc">A caregiver has 60 seconds. Every screen must communicate its purpose in 3 seconds flat.</div>
+    </div>
+    <div class="tone-card" style="border-color:var(--gold)">
+      <div class="tone-title">Invisible intelligence</div>
+      <div class="tone-desc">AI works in the background. Never show spinners or prompts — just better outcomes, quietly delivered.</div>
+    </div>
+  </div>
+</div>
+
+<!-- COLOR SYSTEM -->
+<div class="sec">
+  <div class="sec-label">Color system</div>
+  <div class="sec-title">The palette</div>
+  <p class="sec-sub">Deep forest ink as the base. Mint as the heartbeat. Warm cream for comfort. Gold for moments that matter.</p>
+
+  <div style="margin-bottom:.5rem;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Backgrounds</div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:#0F1A14;border:0.5px solid rgba(255,255,255,.08)">
+      <div class="sw-name" style="color:rgba(255,255,255,.5)">Ink</div>
+      <div class="sw-hex" style="color:#E8F0E9">#0F1A14</div>
+    </div>
+    <div class="swatch" style="background:#1C2E22;border:0.5px solid rgba(255,255,255,.08)">
+      <div class="sw-name" style="color:rgba(255,255,255,.5)">Ink 2</div>
+      <div class="sw-hex" style="color:#E8F0E9">#1C2E22</div>
+    </div>
+    <div class="swatch" style="background:#1D3A28;border:0.5px solid rgba(255,255,255,.08)">
+      <div class="sw-name" style="color:rgba(255,255,255,.5)">Ink 3</div>
+      <div class="sw-hex" style="color:#E8F0E9">#1D3A28</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:.5rem;margin-top:.75rem;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Brand</div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:#2A9060">
+      <div class="sw-name" style="color:rgba(255,255,255,.6)">Sage</div>
+      <div class="sw-hex" style="color:#fff">#2A9060</div>
+    </div>
+    <div class="swatch" style="background:#5DCAA5">
+      <div class="sw-name" style="color:rgba(15,26,20,.7)">Mint</div>
+      <div class="sw-hex" style="color:#0F1A14">#5DCAA5</div>
+    </div>
+    <div class="swatch" style="background:#C9943A">
+      <div class="sw-name" style="color:rgba(255,255,255,.6)">Gold</div>
+      <div class="sw-hex" style="color:#fff">#C9943A</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:.5rem;margin-top:.75rem;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Text &amp; accents</div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:#E8F0E9;border:0.5px solid rgba(0,0,0,.1)">
+      <div class="sw-name" style="color:rgba(15,26,20,.5)">Text primary</div>
+      <div class="sw-hex" style="color:#0F1A14">#E8F0E9</div>
+    </div>
+    <div class="swatch" style="background:#7A9480;border:0.5px solid rgba(255,255,255,.1)">
+      <div class="sw-name" style="color:rgba(255,255,255,.5)">Muted</div>
+      <div class="sw-hex" style="color:#fff">#7A9480</div>
+    </div>
+    <div class="swatch" style="background:#F5EFE6;border:0.5px solid rgba(0,0,0,.1)">
+      <div class="sw-name" style="color:rgba(15,26,20,.5)">Cream</div>
+      <div class="sw-hex" style="color:#0F1A14">#F5EFE6</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:.5rem">Semantic usage rules</div>
+    <div class="badge-row">
+      <span class="badge badge-mint">Mint = success / AI active / health good</span>
+      <span class="badge badge-gold">Gold = alert / AI summary ready</span>
+      <span class="badge badge-red">Red = critical alert only</span>
+      <span class="badge badge-gray">Gray = inactive / secondary</span>
+    </div>
+  </div>
+</div>
+
+<!-- TYPOGRAPHY -->
+<div class="sec">
+  <div class="sec-label">Typography</div>
+  <div class="sec-title">Two fonts, one voice</div>
+  <p class="sec-sub">DM Serif Display for headlines — editorial warmth. DM Sans for everything functional — clean, legible, zero friction.</p>
+
+  <div class="type-row">
+    <div class="type-meta">Display / Hero — DM Serif Display 36px</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:32px;color:#fff;line-height:1.1">Care that never<br><em style="color:var(--mint)">misses a beat</em></div>
+  </div>
+  <div class="type-row">
+    <div class="type-meta">Heading 1 — DM Serif Display 24px</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--text-on-dark)">Today's medication schedule</div>
+  </div>
+  <div class="type-row">
+    <div class="type-meta">Heading 2 — DM Sans 16px / 500</div>
+    <div style="font-size:16px;font-weight:500;color:var(--text-on-dark)">Health check-in · Monday</div>
+  </div>
+  <div class="type-row">
+    <div class="type-meta">Body — DM Sans 14px / 400</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.65">Dad's pain score has been trending up over the last 5 days. Claude flagged a pattern — consider mentioning this at Thursday's appointment.</div>
+  </div>
+  <div class="type-row">
+    <div class="type-meta">Caption / Label — DM Sans 11px / 600 uppercase</div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mint)">AI summary ready</div>
+  </div>
+  <div class="type-row">
+    <div class="type-meta">Mono / Code — for data values</div>
+    <div style="font-family:monospace;font-size:13px;color:var(--mint)">pain: 3.8 / 5  ·  trend: +0.6 (7d)</div>
+  </div>
+</div>
+
+<!-- PHONE MOCKUPS -->
+<div class="sec">
+  <div class="sec-label">Mobile UI</div>
+  <div class="sec-title">App screen reference</div>
+  <p class="sec-sub">Three core mobile screens — dashboard, medication log, and health check-in. All dark-theme, all gesture-first.</p>
+
+  <div class="phone-wrap">
+    <!-- Phone 1: Dashboard -->
+    <div class="phone">
+      <div class="phone-notch"><div class="notch-pill"></div></div>
+      <div class="phone-screen">
+        <div class="ps-bar">
+          <div>
+            <div style="font-size:6px;color:var(--muted)">Good morning</div>
+            <div class="ps-greeting">Margaret</div>
+          </div>
+          <div class="ps-avi"></div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-card-label">Today's score</div>
+          <div class="ps-card-val">7 / 10</div>
+          <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:4px"><div style="width:70%;height:100%;background:var(--mint);border-radius:2px"></div></div>
+        </div>
+        <div class="ps-row">
+          <div class="ps-mini">
+            <div class="ps-mini-label">Meds due</div>
+            <div class="ps-mini-val" style="color:var(--gold)">2 left</div>
+          </div>
+          <div class="ps-mini">
+            <div class="ps-mini-label">Last check</div>
+            <div class="ps-mini-val">3h ago</div>
+          </div>
+        </div>
+        <div style="font-size:7px;color:var(--muted);margin:.375rem 0 .25rem;text-transform:uppercase;letter-spacing:.06em">Medications</div>
+        <div class="ps-list-item">
+          <div class="ps-dot" style="background:var(--mint)"></div>
+          <div class="ps-item-text">Metformin 500mg</div>
+          <div class="ps-item-badge" style="background:rgba(93,202,165,.2);color:var(--mint)">Done</div>
+        </div>
+        <div class="ps-list-item">
+          <div class="ps-dot" style="background:var(--gold)"></div>
+          <div class="ps-item-text">Lisinopril 10mg</div>
+          <div class="ps-item-badge" style="background:rgba(201,148,58,.2);color:var(--gold)">Due</div>
+        </div>
+        <div class="ps-list-item">
+          <div class="ps-dot" style="background:rgba(255,255,255,.2)"></div>
+          <div class="ps-item-text">Atorvastatin 20mg</div>
+          <div class="ps-item-badge" style="background:rgba(255,255,255,.06);color:var(--muted)">8 PM</div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:.375rem;font-size:7px;color:var(--muted)">Dashboard</div>
+    </div>
+
+    <!-- Phone 2: Medication log -->
+    <div class="phone phone2">
+      <div class="phone-notch"><div class="notch-pill"></div></div>
+      <div class="phone-screen">
+        <div style="font-size:7px;color:var(--muted);margin-bottom:.25rem">Log dose</div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-on-dark);margin-bottom:.5rem">Lisinopril 10mg</div>
+        <div style="background:rgba(201,148,58,.08);border:0.5px solid rgba(201,148,58,.2);border-radius:8px;padding:.5rem;margin-bottom:.5rem;text-align:center">
+          <div style="font-size:7px;color:var(--gold);margin-bottom:.25rem">Take photo to verify</div>
+          <div style="width:100%;height:40px;background:rgba(255,255,255,.03);border-radius:6px;display:flex;align-items:center;justify-content:center">
+            <div style="width:18px;height:18px;border:1.5px solid rgba(255,255,255,.2);border-radius:50%"></div>
+          </div>
+        </div>
+        <div style="font-size:7px;color:var(--muted);margin-bottom:.25rem">AI verification</div>
+        <div style="background:rgba(93,202,165,.08);border:0.5px solid rgba(93,202,165,.2);border-radius:6px;padding:.375rem .5rem;margin-bottom:.375rem">
+          <div style="font-size:6px;color:var(--mint)">Pill confirmed — Lisinopril 10mg</div>
+        </div>
+        <div style="font-size:7px;color:var(--muted);margin-bottom:.25rem">Notes (optional)</div>
+        <div style="background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.1);border-radius:6px;height:22px;margin-bottom:.375rem"></div>
+        <div style="background:var(--sage-light);border-radius:16px;padding:.35rem;text-align:center;font-size:8px;font-weight:600;color:#fff;margin-top:.25rem">Log dose taken</div>
+      </div>
+      <div style="text-align:center;padding:.375rem;font-size:7px;color:var(--muted)">Medication log</div>
+    </div>
+
+    <!-- Phone 3: Health check-in -->
+    <div class="phone">
+      <div class="phone-notch"><div class="notch-pill"></div></div>
+      <div class="phone-screen">
+        <div style="font-size:7px;color:var(--muted);margin-bottom:.25rem">Daily check-in</div>
+        <div style="font-size:9px;font-weight:600;color:var(--text-on-dark);margin-bottom:.5rem">How is Dad today?</div>
+
+        <div style="margin-bottom:.375rem">
+          <div style="display:flex;justify-content:space-between;font-size:6px;color:var(--muted);margin-bottom:3px"><span>Pain</span><span style="color:var(--mint)">3 / 5</span></div>
+          <div class="track"><div class="fill" style="width:60%"></div><div class="thumb" style="right:auto;left:55%"></div></div>
+        </div>
+        <div style="margin-bottom:.375rem">
+          <div style="display:flex;justify-content:space-between;font-size:6px;color:var(--muted);margin-bottom:3px"><span>Mood</span><span style="color:var(--mint)">4 / 5</span></div>
+          <div class="track"><div class="fill" style="width:80%"></div><div class="thumb" style="right:auto;left:75%"></div></div>
+        </div>
+        <div style="margin-bottom:.375rem">
+          <div style="display:flex;justify-content:space-between;font-size:6px;color:var(--muted);margin-bottom:3px"><span>Appetite</span><span style="color:var(--gold)">2 / 5</span></div>
+          <div class="track"><div class="fill" style="width:40%;background:var(--gold)"></div><div class="thumb" style="right:auto;left:35%;background:var(--gold)"></div></div>
+        </div>
+        <div style="margin-bottom:.375rem">
+          <div style="display:flex;justify-content:space-between;font-size:6px;color:var(--muted);margin-bottom:3px"><span>Mobility</span><span style="color:var(--mint)">4 / 5</span></div>
+          <div class="track"><div class="fill" style="width:80%"></div><div class="thumb" style="right:auto;left:75%"></div></div>
+        </div>
+
+        <div style="font-size:6px;color:var(--muted);margin:.375rem 0 .2rem">Voice note</div>
+        <div style="background:rgba(93,202,165,.08);border:0.5px solid rgba(93,202,165,.2);border-radius:6px;height:18px;display:flex;align-items:center;justify-content:center;margin-bottom:.375rem">
+          <div style="font-size:6px;color:var(--mint)">Hold to record</div>
+        </div>
+        <div style="background:var(--sage-light);border-radius:14px;padding:.3rem;text-align:center;font-size:7px;font-weight:600;color:#fff">Submit check-in</div>
+      </div>
+      <div style="text-align:center;padding:.375rem;font-size:7px;color:var(--muted)">Health check-in</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPONENTS -->
+<div class="sec">
+  <div class="sec-label">Component library</div>
+  <div class="sec-title">Building blocks</div>
+  <p class="sec-sub">Every component uses the same dark base, rounded forms, and mint/gold accent system.</p>
+
+  <!-- Buttons -->
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.625rem">Buttons</div>
+  <div class="btn-row">
+    <button class="b1">Log medication</button>
+    <button class="b2">View history</button>
+    <button class="b3">AI summary</button>
+    <button class="b4">Alert</button>
+  </div>
+
+  <!-- Inputs -->
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:.875rem 0 .625rem">Inputs</div>
+  <input class="inp" placeholder="Search medications, logs, team members..." readonly>
+  <input class="inp" value="Lisinopril 10mg · 8:00 AM · Daily" readonly style="color:var(--text-on-dark)">
+
+  <!-- Badges -->
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:.875rem 0 .625rem">Badges &amp; status tags</div>
+  <div class="badge-row">
+    <span class="badge badge-mint">Taken</span>
+    <span class="badge badge-gold">Due soon</span>
+    <span class="badge badge-red">Missed</span>
+    <span class="badge badge-gray">Scheduled</span>
+    <span class="badge badge-mint">AI verified</span>
+    <span class="badge" style="background:rgba(93,202,165,.08);color:var(--mint);border:0.5px solid rgba(93,202,165,.2)">Health: Good</span>
+  </div>
+
+  <!-- Feature cards -->
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:.875rem 0 .625rem">Feature cards</div>
+  <div class="comp-grid">
+    <div class="card-feat">
+      <div class="card-feat-icon" style="background:rgba(93,202,165,.12)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#5DCAA5" stroke-width="1.2"/><path d="M5 8l2 2 4-4" stroke="#5DCAA5" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="card-feat-title">Pill verified</div>
+      <div class="card-feat-desc">Lisinopril 10mg · Confirmed correct by AI vision · 8:03 AM</div>
+    </div>
+    <div class="card-feat">
+      <div class="card-feat-icon" style="background:rgba(201,148,58,.12)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v5l3 3" stroke="#C9943A" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="8" r="6" stroke="#C9943A" stroke-width="1.2"/></svg>
+      </div>
+      <div class="card-feat-title">Dose due</div>
+      <div class="card-feat-desc">Metformin 500mg · Due in 20 minutes · Reminder sent</div>
+    </div>
+    <div class="card-feat" style="border-color:rgba(93,202,165,.2)">
+      <div class="card-feat-icon" style="background:rgba(93,202,165,.1)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 13s1-4 5-4 5 4 5 4" stroke="#5DCAA5" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="6" r="2.5" stroke="#5DCAA5" stroke-width="1.2"/></svg>
+      </div>
+      <div class="card-feat-title">Weekly summary</div>
+      <div class="card-feat-desc">AI-generated · Last 7 days · Ready to share with doctor</div>
+    </div>
+    <div class="card-feat">
+      <div class="card-feat-icon" style="background:rgba(220,80,80,.1)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v6M8 11v1.5" stroke="#E07070" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="6" stroke="#E07070" stroke-width="1.2"/></svg>
+      </div>
+      <div class="card-feat-title">Anomaly alert</div>
+      <div class="card-feat-desc">Appetite down 3 days in a row · Check in with Dad</div>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:.875rem 0 .625rem">Metric cards</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+    <div class="card-stat"><div class="stat-val">94%</div><div class="stat-lbl">Adherence this week</div></div>
+    <div class="card-stat" style="background:rgba(201,148,58,.07);border-color:rgba(201,148,58,.15)"><div class="stat-val" style="color:var(--gold)">3.8</div><div class="stat-lbl">Avg pain score</div></div>
+    <div class="card-stat"><div class="stat-val">12d</div><div class="stat-lbl">Streak ✓</div></div>
+  </div>
+</div>
+
+<!-- SCREEN FLOWS -->
+<div class="sec">
+  <div class="sec-label">Navigation &amp; flows</div>
+  <div class="sec-title">Screen map by role</div>
+  <p class="sec-sub">Each role sees a different navigation structure. The app adapts its sidebar and bottom tabs based on who is signed in.</p>
+
+  <div class="flow-screens">
+    <div class="flow-screen">
+      <div class="fs-bar" style="background:var(--sage-light)"></div>
+      <div class="fs-name">Primary caregiver</div>
+      <div class="fs-role">Full access</div>
+      <div class="fs-block accent"></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-row2"><div class="fs-half a"></div><div class="fs-half"></div></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-block sm" style="background:rgba(201,148,58,.12)"></div>
+    </div>
+    <div class="flow-screen">
+      <div class="fs-bar" style="background:#5DCAA5"></div>
+      <div class="fs-name">Secondary caregiver</div>
+      <div class="fs-role">Log only</div>
+      <div class="fs-block accent"></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-row2"><div class="fs-half a"></div><div class="fs-half"></div></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-block sm" style="opacity:.3"></div>
+      <div class="fs-block sm" style="opacity:.3"></div>
+    </div>
+    <div class="flow-screen">
+      <div class="fs-bar" style="background:var(--gold)"></div>
+      <div class="fs-name">Doctor</div>
+      <div class="fs-role">Read only</div>
+      <div class="fs-block" style="background:rgba(201,148,58,.12)"></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-row2"><div class="fs-half" style="opacity:.3"></div><div class="fs-half" style="opacity:.3"></div></div>
+      <div class="fs-block sm" style="opacity:.3"></div>
+      <div class="fs-block sm" style="opacity:.3"></div>
+    </div>
+    <div class="flow-screen">
+      <div class="fs-bar" style="background:#7A9480"></div>
+      <div class="fs-name">Patient</div>
+      <div class="fs-role">Own view</div>
+      <div class="fs-block" style="background:rgba(122,148,128,.12)"></div>
+      <div class="fs-block sm"></div>
+      <div class="fs-row2"><div class="fs-half" style="opacity:.2"></div><div class="fs-half" style="opacity:.2"></div></div>
+      <div class="fs-block sm" style="opacity:.2"></div>
+    </div>
+    <div class="flow-screen">
+      <div class="fs-bar" style="background:#993C1D"></div>
+      <div class="fs-name">Agency admin</div>
+      <div class="fs-role">Fleet view</div>
+      <div class="fs-block" style="background:rgba(153,60,29,.12)"></div>
+      <div class="fs-row2"><div class="fs-half" style="background:rgba(153,60,29,.08)"></div><div class="fs-half"></div></div>
+      <div class="fs-block sm" style="background:rgba(153,60,29,.08)"></div>
+      <div class="fs-block sm" style="background:rgba(201,148,58,.1)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MOTION -->
+<div class="sec">
+  <div class="sec-label">Motion &amp; interaction</div>
+  <div class="sec-title">How things move</div>
+  <p class="sec-sub">Motion must always feel purposeful. Inspired by Clearmind's calm transitions — nothing should startle.</p>
+
+  <div class="motion-row">
+    <div class="motion-item">
+      <div class="motion-dot" style="background:var(--mint)"></div>
+      <div>
+        <div class="motion-title">Screen transitions — 280ms ease-out</div>
+        <div class="motion-desc">Slide up from bottom for new screens. Slide right for back navigation. Never use fade — too slow in a care context.</div>
+      </div>
+    </div>
+    <div class="motion-item">
+      <div class="motion-dot" style="background:var(--gold)"></div>
+      <div>
+        <div class="motion-title">Medication logged — 160ms spring</div>
+        <div class="motion-desc">The check icon scales from 0.8→1.0 with a slight bounce (spring: stiffness 200, damping 14). Green fill sweeps left to right. Haptic feedback on native.</div>
+      </div>
+    </div>
+    <div class="motion-item">
+      <div class="motion-dot" style="background:var(--mint)"></div>
+      <div>
+        <div class="motion-title">AI summary streaming — token by token</div>
+        <div class="motion-desc">Text appears token by token with a cursor blinking at 1s interval. No loading spinner — the content is the animation. Mint glow on the card border fades in.</div>
+      </div>
+    </div>
+    <div class="motion-item">
+      <div class="motion-dot" style="background:#E07070"></div>
+      <div>
+        <div class="motion-title">Critical alert — pulse 400ms</div>
+        <div class="motion-desc">Red border pulses twice (opacity 1 → 0.4 → 1 → 0.4) then holds. Haptic: long buzz on mobile. Never auto-dismiss a critical alert.</div>
+      </div>
+    </div>
+    <div class="motion-item">
+      <div class="motion-dot" style="background:var(--muted)"></div>
+      <div>
+        <div class="motion-title">Health slider — real-time</div>
+        <div class="motion-desc">Thumb follows finger with zero lag. Track fill updates instantly. Numeric value fades in above thumb. No debounce on visual — debounce only the API call (300ms).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE + COPY TONE -->
+<div class="sec">
+  <div class="sec-label">Copy voice</div>
+  <div class="sec-title">Write like a trusted friend</div>
+  <p class="sec-sub">Every word in CarePath should sound like it was written by someone who has been a caregiver — practical, warm, never condescending.</p>
+
+  <div style="margin-bottom:8px;font-size:11px;color:var(--mint);font-weight:500">Do this</div>
+  <div class="tone-card" style="margin-bottom:6px">"Dad hasn't taken Metformin yet. Want to send a reminder?"</div>
+  <div class="tone-card" style="margin-bottom:6px">"Appetite has been low for 3 days — worth mentioning at Thursday's appointment."</div>
+  <div class="tone-card" style="margin-bottom:16px">"All caught up! You're doing great."</div>
+
+  <div style="margin-bottom:8px;font-size:11px;color:#E07070;font-weight:500">Avoid this</div>
+  <div class="avoid-card" style="margin-bottom:6px">"Patient ID 4421 has a missed medication event. Compliance: 87%."</div>
+  <div class="avoid-card" style="margin-bottom:6px">"Warning: Anomaly detected in health_checks table. Z-score: 1.7."</div>
+  <div class="avoid-card">"Error: Unable to process AI inference request."</div>
+</div>
+
+<!-- CTA -->
+<div class="cta-strip">
+  <h3>Ready to build this?</h3>
+  <p>Generate production code for any component, screen, or flow in this design system.</p>
+  <div class="cta-btns">
+    <button class="b1" onclick="sendPrompt('Build the CarePath React Native home screen with this dark forest design system — full working code ↗')">Build home screen ↗</button>
+    <button class="b3" onclick="sendPrompt('Generate the CarePath Next.js dashboard with this design system and Recharts health timeline ↗')">Build dashboard ↗</button>
+    <button class="b2" onclick="sendPrompt('Create the Figma-style design tokens file for CarePath based on this design doc ↗')">Design tokens ↗</button>
+  </div>
+</div>
+
+</div>
