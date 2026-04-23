@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -17,8 +18,8 @@ export default function Home() {
           Visual language, component library, and UX principles for the CarePath elder care platform — inspired by warmth, trust, and calm clarity.
         </p>
         <div className="hero-btns">
-          <button className="btn-primary">Daily Overview</button>
-          <button className="btn-ghost">View Patient Logs</button>
+          <Link href="/checkin" className="btn-primary" style={{ textDecoration: 'none' }}>Daily Check-in</Link>
+          <Link href="/medications" className="btn-ghost" style={{ textDecoration: 'none' }}>View Patient Logs</Link>
         </div>
       </div>
 
@@ -90,7 +91,7 @@ export default function Home() {
         <h3>Need to notify the Doctor?</h3>
         <p>Send an AI generated weekly summary directly to the provider portal.</p>
         <div className="cta-btns">
-            <button className="btn-primary">Generate Report ↗</button>
+            <Link href="/summary" className="btn-primary" style={{ textDecoration: 'none' }}>Generate Report ↗</Link>
         </div>
       </div>
     </div>

@@ -15,6 +15,9 @@ const dmSerif = DM_Serif_Display({
   style: ["normal", "italic"]
 });
 
+import { ClerkProvider } from '@clerk/nextjs';
+import Sidebar from '@/components/Sidebar';
+
 export const metadata: Metadata = {
   title: "CarePath Dashboard",
   description: "CarePath Elder Care Dashboard - Warm, Trust, Calm",
@@ -26,8 +29,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
-      <body>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
+        <body>
+          <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
+            <Sidebar />
+            <main style={{ flex: 1, position: 'relative', overflowX: 'hidden' }}>
+              {children}
+            </main>
+          </div>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

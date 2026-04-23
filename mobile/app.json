@@ -24,8 +24,16 @@
       "predictiveBackGestureEnabled": false
     },
     "platforms": ["ios", "android"],
+    "scheme": "carepath",
     "plugins": [
-      "expo-font"
+      "expo-router",
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow CarePath to access your camera to verify medications."
+        }
+      ]
     ]
   }
 }

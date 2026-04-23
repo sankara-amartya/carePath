@@ -1,0 +1,422 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.root{padding:1rem 0}
+.tabs{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:8px}
+.tab{font-size:12px;font-weight:500;color:var(--color-text-secondary);background:none;border:0.5px solid transparent;padding:5px 12px;cursor:pointer;border-radius:var(--border-radius-md);transition:all .15s}
+.tab:hover{background:var(--color-background-secondary)}
+.tab.on{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-secondary)}
+.pnl{display:none}.pnl.on{display:block}
+
+.sl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;margin-top:1.25rem}
+.sl:first-child{margin-top:0}
+
+.feat-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.feat-row:last-child{border-bottom:none}
+.feat-check{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;margin-top:1px}
+.fc-yes{background:var(--color-background-success);color:var(--color-text-success)}
+.fc-no{background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.fc-part{background:var(--color-background-warning);color:var(--color-text-warning)}
+.feat-text{flex:1}
+.feat-title{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.feat-detail{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.5}
+.feat-file{font-family:var(--font-mono);font-size:10px;background:var(--color-background-secondary);padding:1px 6px;border-radius:4px;color:var(--color-text-tertiary)}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem;text-align:center}
+.stat-n{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.stat-l{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+
+.prompt-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:12px;position:relative}
+.prompt-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px}
+.prompt-text{font-size:12px;color:var(--color-text-primary);line-height:1.75;white-space:pre-wrap;font-family:var(--font-mono)}
+.copy-btn{position:absolute;top:12px;right:12px;font-size:10px;font-weight:500;padding:4px 10px;border-radius:var(--border-radius-md);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:var(--color-background-secondary)}
+.copy-btn.copied{color:var(--color-text-success);border-color:var(--color-border-success)}
+
+.note-box{background:var(--color-background-info);border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;color:var(--color-text-info);line-height:1.6;margin-bottom:12px}
+.warn-box{background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;color:var(--color-text-warning);line-height:1.6;margin-bottom:12px}
+</style>
+
+<h2 class="sr-only">CarePath feature audit and Antigravity prompt templates</h2>
+<div class="root">
+<div class="tabs">
+  <button class="tab on" onclick="sw(0)">What's built</button>
+  <button class="tab" onclick="sw(1)">What's missing</button>
+  <button class="tab" onclick="sw(2)">Antigravity prompt</button>
+  <button class="tab" onclick="sw(3)">Screen prompts</button>
+</div>
+
+<!-- TAB 0: WHAT'S BUILT -->
+<div class="pnl on" id="p0">
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n" style="color:var(--color-text-success)">6</div><div class="stat-l">Built</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--color-text-warning)">2</div><div class="stat-l">Partial</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--color-text-tertiary)">18</div><div class="stat-l">Not yet</div></div>
+  </div>
+
+  <div class="sl">Foundation — confirmed in your files</div>
+
+  <div class="feat-row">
+    <div class="feat-check fc-yes">✓</div>
+    <div class="feat-text">
+      <div class="feat-title">Design system tokens</div>
+      <div class="feat-detail">Colors (ink, mint, gold, sage, muted, alert), spacing (sm/md/lg/xl), border radius — all in <span class="feat-file">theme.ts</span></div>
+    </div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-check fc-yes">✓</div>
+    <div class="feat-text">
+      <div class="feat-title">Font loading — DM Sans + DM Serif Display</div>
+      <div class="feat-detail">All 4 weights loaded via <span class="feat-file">@expo-google-fonts</span>. Null return guard while loading. ✓</div>
+    </div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-check fc-yes">✓</div>
+    <div class="feat-text">
+      <div class="feat-title">Home dashboard screen (skeleton)</div>
+      <div class="feat-detail">Greeting header, today's score card, mini cards (meds due / last check), medication list with badges, CTA button — all in <span class="feat-file">App.tsx</span></div>
+    </div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-check fc-yes">✓</div>
+    <div class="feat-text">
+      <div class="feat-title">Medication list UI</div>
+      <div class="feat-detail">3 items with dot indicators and Done/Due/Scheduled badges. Static data only — no API yet.</div>
+    </div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-check fc-yes">✓</div>
+    <div class="feat-text">
+      <div class="feat-title">Progress bar component</div>
+      <div class="feat-detail">Track + fill pattern with percentage width. Used in score card. Reusable.</div>
+    </div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-check fc-yes">✓</div>
+    <div class="feat-text">
+      <div class="feat-title">Expo project config</div>
+      <div class="feat-detail"><span class="feat-file">app.json</span> — portrait lock, new arch enabled, iOS + Android + edge-to-edge. expo-font plugin registered.</div>
+    </div>
+  </div>
+
+  <div class="sl">Partial — structure exists, needs real implementation</div>
+
+  <div class="feat-row">
+    <div class="feat-check fc-part">~</div>
+    <div class="feat-text">
+      <div class="feat-title">Avatar component</div>
+      <div class="feat-detail">Rendered as a plain sage-colored circle. No initials, no image support yet.</div>
+    </div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-check fc-part">~</div>
+    <div class="feat-text">
+      <div class="feat-title">Primary button</div>
+      <div class="feat-detail">Styled correctly, no onPress handler or navigation connected yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 1: WHAT'S MISSING -->
+<div class="pnl" id="p1">
+  <div class="warn-box">Everything below needs to be built. Your current code is a single-screen static UI — no navigation, no auth, no data layer yet.</div>
+
+  <div class="sl">Navigation</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Expo Router setup</div><div class="feat-detail">app/ directory, _layout.tsx, tab navigation (Dashboard / Medications / Journal / Schedule). Currently App.tsx is a single screen with no routing.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Bottom tab bar</div><div class="feat-detail">4 tabs: Home, Medications, Journal, Team. Role-aware — some tabs hidden based on user role.</div></div></div>
+
+  <div class="sl">Auth</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Clerk auth integration</div><div class="feat-detail">@clerk/expo — sign in, magic link, session management. JWT with role claim.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Onboarding flow</div><div class="feat-detail">Create patient profile, invite care team members by email, set role.</div></div></div>
+
+  <div class="sl">Medication screens</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Medication log screen</div><div class="feat-detail">Mark taken/skipped, photo pill verification via expo-camera, AI confirm badge.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Add medication form</div><div class="feat-detail">Name, dosage, frequency, schedule times. Primary caregiver only.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Medication history view</div><div class="feat-detail">Calendar heatmap of taken/skipped/missed per medication.</div></div></div>
+
+  <div class="sl">Health check-in</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Daily check-in screen</div><div class="feat-detail">5 sliders (pain, mood, appetite, mobility, energy — 1 to 5). Optional notes. Submit to API.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Voice journal screen</div><div class="feat-detail">expo-av record, hold-to-record UX, upload to R2, Whisper transcription, Claude extraction.</div></div></div>
+
+  <div class="sl">AI features</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Pill photo verification flow</div><div class="feat-detail">Camera → upload → Claude vision → confirmed/mismatch card.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">AI summary screen</div><div class="feat-detail">Streaming Claude response for weekly health summary. SSE token-by-token render.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Alert inbox</div><div class="feat-detail">Anomaly alerts from ML service. Critical banner, resolve/dismiss actions.</div></div></div>
+
+  <div class="sl">Data + API</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">tRPC client setup</div><div class="feat-detail">@trpc/client + @tanstack/react-query. All API calls go through tRPC hooks.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Offline queue (MMKV)</div><div class="feat-detail">react-native-mmkv write queue. expo-background-fetch sync on reconnect.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Push notifications</div><div class="feat-detail">expo-notifications — medication reminders, missed dose alerts, AI summary ready.</div></div></div>
+
+  <div class="sl">Team + settings</div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Care team screen</div><div class="feat-detail">List members, invite by email, change role. Primary caregiver only.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Patient profile screen</div><div class="feat-detail">Name, DOB, conditions, emergency contact, medications list overview.</div></div></div>
+  <div class="feat-row"><div class="feat-check fc-no">○</div><div class="feat-text"><div class="feat-title">Permission-aware UI</div><div class="feat-detail">usePermissions hook — hide/show buttons based on role (EDIT_MEDICATIONS, MANAGE_TEAM etc.).</div></div></div>
+</div>
+
+<!-- TAB 2: MASTER PROMPT -->
+<div class="pnl" id="p2">
+  <div class="note-box">Copy this full prompt and paste it as the first message to Antigravity. It gives the full context — design system, existing files, what's built, and what to build next.</div>
+
+  <div class="prompt-box">
+    <div class="prompt-label">Master context prompt — paste this first</div>
+    <button class="copy-btn" id="copy0" onclick="copyText(0)">Copy</button>
+    <div class="prompt-text" id="pt0">## CarePath — React Native App Context
+
+You are helping build CarePath, an AI-powered elder care coordination mobile app built with Expo + React Native.
+
+---
+
+### What already exists (do not recreate)
+
+**File: theme.ts** — design tokens
+- colors: ink (#0F1A14), ink2 (#1C2E22), sage (#1D6A45), sageLight (#2A9060), mint (#5DCAA5), gold (#C9943A), textOnDark (#E8F0E9), muted (#7A9480), alert (#E07070)
+- spacing: sm=8, md=16, lg=24, xl=32
+- border: radiusSm=10, radius=16, radiusLg=22
+
+**File: App.tsx** — single home dashboard screen (static, no navigation)
+- Dark ink background (#0F1A14)
+- Fonts: DM Serif Display (headings) + DM Sans (body/labels/buttons)
+- Components built: greeting header, score card, mini cards, medication list, badge system, primary button
+- All data is hardcoded — no API connected
+
+**File: app.json** — Expo 54, portrait lock, new arch enabled, expo-font plugin
+
+**Dependencies already installed:** expo ~54, react-native 0.81.5, @expo-google-fonts/dm-sans, @expo-google-fonts/dm-serif-display, expo-font, expo-status-bar
+
+---
+
+### Design system rules (always follow these)
+
+- Background: always ink (#0F1A14) or ink2 (#1C2E22)
+- Primary accent: mint (#5DCAA5) for success / active / AI confirmed states
+- Warning accent: gold (#C9943A) for due / pending / alerts
+- Critical: alert (#E07070) for missed doses / critical alerts only
+- Typography: DMSerifDisplay_400Regular for all headings, DMSans_400Regular / 500Medium / 600SemiBold for everything else
+- All imports from './theme' — never hardcode color hex values inline
+- Rounded corners: border.radiusSm (10) for small cards, border.radius (16) for main cards
+- No white backgrounds anywhere — dark theme throughout
+
+---
+
+### Tech stack
+
+- Expo Router v4 (file-based navigation, app/ directory)
+- @clerk/expo for auth (JWT with role claim in session)
+- tRPC client + @tanstack/react-query for all API calls
+- react-native-mmkv for offline queue
+- expo-camera for pill photo
+- expo-av for voice recording
+- expo-notifications for push alerts
+
+---
+
+### Role system
+
+6 roles: PRIMARY_CAREGIVER, SECONDARY_CAREGIVER, DOCTOR, PATIENT, AGENCY_ADMIN, PLATFORM_ADMIN
+
+usePermissions() hook returns can(action: Action) => boolean
+Actions: LOG_MEDICATION, EDIT_MEDICATIONS, MANAGE_TEAM, GENERATE_AI_SUMMARY, VIEW_HEALTH_TIMELINE, VERIFY_PILL_PHOTO, VOICE_JOURNAL, RESOLVE_ALERTS
+
+Always hide/show UI elements based on can(action) — never hard-check role strings in components.
+
+---
+
+### API (tRPC)
+
+Base URL: https://api.carepath.app/trpc
+All procedures are authed via Clerk JWT.
+Key routers: patients, medications, medication_logs, health_checks, alerts, ai_summaries, careTeam
+
+---
+
+### Current task
+
+[DESCRIBE YOUR NEXT SCREEN OR FEATURE HERE]
+
+Follow the existing App.tsx patterns exactly. Import colors/spacing/border from './theme'. Use the same StyleSheet.create approach. No external UI libraries.</div>
+  </div>
+</div>
+
+<!-- TAB 3: SCREEN PROMPTS -->
+<div class="pnl" id="p3">
+  <div class="note-box">Use these after sending the master prompt. Each one is a focused task for a single screen or feature. Paste after the master context.</div>
+
+  <div class="sl">Navigation setup</div>
+  <div class="prompt-box">
+    <div class="prompt-label">Prompt 1 — Expo Router + tab navigation</div>
+    <button class="copy-btn" id="copy1" onclick="copyText(1)">Copy</button>
+    <div class="prompt-text" id="pt1">Migrate the existing App.tsx into Expo Router file-based navigation.
+
+Create this folder structure:
+app/
+  _layout.tsx          ← root layout, Clerk provider, font loading
+  (auth)/
+    login.tsx          ← Clerk sign-in screen, dark ink background
+  (tabs)/
+    _layout.tsx        ← bottom tab bar (4 tabs)
+    index.tsx          ← move existing App.tsx dashboard here
+    medications.tsx    ← placeholder screen
+    journal.tsx        ← placeholder screen
+    team.tsx           ← placeholder screen
+
+Bottom tab bar style:
+- Background: ink2 (#1C2E22)
+- Active tint: mint (#5DCAA5)
+- Inactive tint: muted (#7A9480)
+- Tab labels: DM Sans 500, 11px
+- Icons: use simple inline SVG paths (no icon library)
+- Tab items: Home, Meds, Journal, Team
+
+Move font loading and SafeAreaView to _layout.tsx. The (tabs)/index.tsx should be exactly the current App.tsx content with no changes to the component logic.</div>
+  </div>
+
+  <div class="sl">Medication log</div>
+  <div class="prompt-box">
+    <div class="prompt-label">Prompt 2 — Medication log screen with pill photo</div>
+    <button class="copy-btn" id="copy2" onclick="copyText(2)">Copy</button>
+    <div class="prompt-text" id="pt2">Build app/(tabs)/medications.tsx — the medication logging screen.
+
+Screen sections (scroll view, dark ink background):
+
+1. Header: "Today's medications" in DM Serif Display 24px, textOnDark
+
+2. Medication card (for each medication — map over list):
+   - Background: ink2, border-radius 16, padding 16
+   - Medication name (DM Sans 600, 16px, textOnDark)
+   - Dosage + schedule time (DM Sans 400, 13px, muted)
+   - Status badge (Done=mint, Due=gold, Missed=alert, Scheduled=gray)
+   - "Log dose" button — only show if can(Action.LOG_MEDICATION) and status !== Done
+
+3. Log dose bottom sheet (opens on button press):
+   - Dark overlay background
+   - Card: ink2, border-radius 22 at top
+   - Medication name + dosage at top
+   - "Take photo to verify" section (gold tinted card):
+     - If can(Action.VERIFY_PILL_PHOTO): show camera button → opens expo-camera
+     - Camera result: show thumbnail + "AI verifying..." → then "Confirmed: [name]" in mint or "Mismatch — check pill" in alert
+   - "Taken without photo" option (ghost button, muted)
+   - Notes input (optional, dark input field)
+   - "Log dose taken" primary button (sageLight, full width, rounded 30)
+
+4. On submit: call trpc.medication_logs.log.mutate({ medicationId, status: 'taken', photoUrl?, aiVerified? })
+
+Use can(Action.EDIT_MEDICATIONS) to show/hide the "Add medication" FAB button (mint, bottom right, +).
+
+All data from: trpc.medications.list.useQuery({ patientId })</div>
+  </div>
+
+  <div class="sl">Health check-in</div>
+  <div class="prompt-box">
+    <div class="prompt-label">Prompt 3 — Daily health check-in with sliders</div>
+    <button class="copy-btn" id="copy3" onclick="copyText(3)">Copy</button>
+    <div class="prompt-text" id="pt3">Build a health check-in modal screen at app/checkin.tsx (opened as a modal from the dashboard).
+
+Layout (dark ink background, ScrollView):
+
+1. Close button (top right, X in a circle, muted)
+
+2. Heading: "How is [patient name] today?" — DM Serif Display 24px
+
+3. Five slider rows (pain, mood, appetite, mobility, energy):
+   Each row:
+   - Label left (DM Sans 500, 13px, muted) + value right ("3 / 5" in mint or gold if <3)
+   - Custom slider: track height 4px (rgba white 0.1), fill height 4px (mint if ≥3, gold if <3), thumb 20px circle (mint or gold, ink border 2px)
+   - Use Slider from @react-native-community/slider
+
+4. Voice note section:
+   - Label: "Add a voice note (optional)"
+   - Big record button: 64px circle, sageLight bg, hold-to-record
+   - Recording state: pulsing red circle, "Recording... release to stop"
+   - After record: waveform placeholder + "Transcribing..." then show transcript text in muted card
+   - Uses expo-av for recording
+
+5. "Submit check-in" primary button (full width, sageLight, rounded 30)
+   - Calls trpc.health_checks.create.mutate({ patientId, pain, mood, appetite, mobility, energy, notes })
+   - On success: show mint confirmation card "Check-in saved" then close modal
+
+All slider values: integers 1–5. Default: 3.</div>
+  </div>
+
+  <div class="sl">Permissions hook</div>
+  <div class="prompt-box">
+    <div class="prompt-label">Prompt 4 — usePermissions hook</div>
+    <button class="copy-btn" id="copy4" onclick="copyText(4)">Copy</button>
+    <div class="prompt-text" id="pt4">Create hooks/usePermissions.ts — role-based permission system.
+
+The file should export:
+1. Role enum (string union): PRIMARY_CAREGIVER | SECONDARY_CAREGIVER | DOCTOR | PATIENT | AGENCY_ADMIN | PLATFORM_ADMIN
+2. Action enum (string union): LOG_MEDICATION | EDIT_MEDICATIONS | MANAGE_TEAM | GENERATE_AI_SUMMARY | VIEW_HEALTH_TIMELINE | VERIFY_PILL_PHOTO | VOICE_JOURNAL | RESOLVE_ALERTS | DOWNLOAD_APPT_BRIEF
+3. PERMISSIONS map: Record<Role, Set<Action>> — exact mapping from design doc
+4. canDo(role, action): boolean helper
+5. usePermissions() hook: reads role from Clerk useAuth().sessionClaims.role and returns { can: (action: Action) => boolean, role: Role }
+
+PERMISSIONS map:
+- PRIMARY_CAREGIVER: all actions
+- SECONDARY_CAREGIVER: LOG_MEDICATION, VERIFY_PILL_PHOTO, VOICE_JOURNAL, VIEW_HEALTH_TIMELINE, RESOLVE_ALERTS
+- DOCTOR: VIEW_HEALTH_TIMELINE, DOWNLOAD_APPT_BRIEF
+- PATIENT: VIEW_HEALTH_TIMELINE
+- AGENCY_ADMIN: VIEW_HEALTH_TIMELINE, MANAGE_TEAM
+- PLATFORM_ADMIN: all actions
+
+Usage in components:
+  const { can } = usePermissions()
+  {can(Action.EDIT_MEDICATIONS) && <AddMedicationButton />}
+
+Import path: import { usePermissions, Action } from '../hooks/usePermissions'</div>
+  </div>
+
+  <div class="sl">AI summary</div>
+  <div class="prompt-box">
+    <div class="prompt-label">Prompt 5 — AI weekly summary screen</div>
+    <button class="copy-btn" id="copy5" onclick="copyText(5)">Copy</button>
+    <div class="prompt-text" id="pt5">Build app/summary.tsx — AI-generated weekly health summary screen.
+
+Only visible to PRIMARY_CAREGIVER. Check can(Action.GENERATE_AI_SUMMARY) at top — show "You don't have permission to view summaries" in muted text if false.
+
+Layout (dark ink, ScrollView):
+
+1. Header row: "Weekly summary" (DM Serif Display 24px) + "Generate" button (mint ghost, right)
+
+2. Date range pill: "Apr 14 – Apr 21" in gray badge
+
+3. Stat strip (horizontal scroll, 4 metric cards):
+   - Medication adherence: "94%" in mint, DM Serif Display 28px
+   - Avg pain: "3.8" in gold if >3, mint if ≤3
+   - Check-ins logged: "7 / 7" in mint
+   - Alerts this week: "1" in alert color if >0
+
+4. AI summary card (ink2 background, mint left border 2px, border-radius 16, padding 16):
+   - Label: "AI SUMMARY" in mint, 10px uppercase
+   - Summary text renders token-by-token via SSE from the API
+   - While loading: show 3 lines of animated shimmer (opacity 0.3 → 0.6 → 0.3, 1.2s loop)
+   - After loaded: DM Sans 400, 14px, textOnDark, line-height 22
+
+5. "Share with doctor" button (gold ghost, full width) — exports PDF via Linking.openURL
+
+6. Sections: Medications, Health trends, Alerts & anomalies — each a titled block with bullet points from the AI response
+
+SSE endpoint: GET /api/summaries/generate?patientId=X&type=weekly
+Parse response as newline-delimited JSON chunks, append to displayed text.</div>
+  </div>
+</div>
+</div>
+
+<script>
+function sw(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));
+  document.querySelectorAll('.pnl').forEach((p,j)=>p.classList.toggle('on',i===j));
+}
+
+function copyText(i) {
+  const el = document.getElementById('pt'+i);
+  const btn = document.getElementById('copy'+i);
+  navigator.clipboard.writeText(el.textContent.trim()).then(()=>{
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
