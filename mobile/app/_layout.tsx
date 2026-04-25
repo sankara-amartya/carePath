@@ -6,6 +6,7 @@ import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
 import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '../theme';
+import { TRPCProvider } from '../trpc/provider';
 
 const tokenCache = {
   async getToken(key: string) {
@@ -32,7 +33,11 @@ const tokenCache = {
   },
 };
 
-const publishableKey = "pk_test_bW9ja2VkLWNsZXJrLWtleS5jbGVyay5hY2NvdW50cy5kZXYk"; // Placeholder
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+if (!publishableKey) {
+  throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in .env");
+}
 
 export default function RootLayout() {
   let [fontsLoaded] = useFonts({
@@ -48,15 +53,18 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ink } }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
-          <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="summary" />
-        </Stack>
-      </SafeAreaProvider>
+      <TRPCProvider>
+        <SafeAreaProvider>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ink } }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="summary" />
+          </Stack>
+        </SafeAreaProvider>
+      </TRPCProvider>
     </ClerkProvider>
   );
 }
+

@@ -2,33 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { usePermissions, Action } from '@/hooks/usePermissions';
+import { usePatient } from '@/context/PatientContext';
+import { trpc } from '@/lib/trpc';
 
 export default function SummaryScreen() {
   const { can } = usePermissions();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [summaryText, setSummaryText] = useState("");
+  const { patientId } = usePatient();
+  
+  // ── tRPC queries ──────────────────────────────────────────────────────────
+  const {
+    data: latestSummary,
+    isLoading,
+    refetch
+  } = trpc.aiSummaries.latest.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
 
-  useEffect(() => {
-    if (loading) {
-      let text = "Dad has generally been adhering to his medication schedule, but we noticed a slight increase in reported pain levels on Thursday and Friday. His appetite remains stable, though his energy levels dropped slightly over the weekend. Overall, vitals are within normal range.";
-      let idx = 0;
-      
-      const interval = setInterval(() => {
-        if (idx < text.length) {
-          setSummaryText(prev => prev + text[idx]);
-          idx++;
-        } else {
-          setLoading(false);
-          clearInterval(interval);
-        }
-      }, 20);
-
-      return () => clearInterval(interval);
+  const generateMutation = trpc.aiSummaries.generate.useMutation({
+    onSuccess: () => {
+      refetch();
     }
-  }, [loading]);
+  });
+
+  if (!patientId) {
+    return (
+      <div style={{ padding: '1.5rem', minHeight: '100vh' }}>
+        <div style={{ backgroundColor: 'rgba(201,148,58,0.1)', border: '1px solid rgba(201,148,58,0.3)', borderRadius: 'var(--radius)', padding: '1.5rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--gold)', fontWeight: 500, margin: 0 }}>
+            No patient selected. Please select a patient from the sidebar.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!can(Action.GENERATE_AI_SUMMARY)) {
     return (
@@ -44,9 +54,25 @@ export default function SummaryScreen() {
     );
   }
 
-  const handleShare = () => {
-    window.location.href = 'mailto:doctor@hospital.com?subject=Weekly Summary&body=' + encodeURIComponent(summaryText);
+  const handleGenerate = () => {
+    if (!patientId) return;
+    const now = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(now.getDate() - 7);
+    
+    generateMutation.mutate({
+      patientId,
+      weekStart: lastWeek.toISOString(),
+      weekEnd: now.toISOString(),
+    });
   };
+
+  const handleShare = () => {
+    if (!latestSummary) return;
+    window.location.href = 'mailto:doctor@hospital.com?subject=Weekly Summary&body=' + encodeURIComponent(latestSummary.content);
+  };
+
+  const isGenerating = generateMutation.isPending;
 
   return (
     <div style={{ paddingBottom: '6rem' }}>
@@ -57,13 +83,23 @@ export default function SummaryScreen() {
           </button>
           <h1 className="sec-title" style={{ margin: 0 }}>Weekly summary</h1>
         </div>
-        <button className="b3">Generate</button>
+        <button 
+          className="b3" 
+          onClick={handleGenerate}
+          disabled={isGenerating}
+        >
+          {isGenerating ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : "Generate"}
+        </button>
       </div>
 
       <div style={{ padding: '0 1.5rem' }}>
-        <div style={{ display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.06)', padding: '6px 12px', borderRadius: '16px', marginBottom: '1.5rem' }}>
-          <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--muted)' }}>Apr 14 – Apr 21</span>
-        </div>
+        {latestSummary && (
+          <div style={{ display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.06)', padding: '6px 12px', borderRadius: '16px', marginBottom: '1.5rem' }}>
+            <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--muted)' }}>
+              {new Date(latestSummary.weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {new Date(latestSummary.weekEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+        )}
 
         <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', marginBottom: '1.5rem', paddingBottom: '8px' }}>
           <div className="card-stat" style={{ flexShrink: 0, width: '100px' }}>
@@ -86,21 +122,27 @@ export default function SummaryScreen() {
 
         <div style={{ backgroundColor: 'var(--ink2)', borderLeft: '2px solid var(--mint)', borderRadius: 'var(--radius)', padding: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--mint)', letterSpacing: '1px', marginBottom: '8px' }}>AI SUMMARY</div>
-          {loading && summaryText.length === 0 ? (
+          {(isLoading || isGenerating) ? (
             <div className="shimmer-wrapper">
               <div className="shimmer-line" style={{ width: '100%' }} />
               <div className="shimmer-line" style={{ width: '85%' }} />
               <div className="shimmer-line" style={{ width: '60%' }} />
             </div>
+          ) : latestSummary ? (
+            <div style={{ fontSize: '14px', lineHeight: '22px', margin: 0, whiteSpace: 'pre-wrap' }}>
+              {latestSummary.content}
+            </div>
           ) : (
-            <p style={{ fontSize: '14px', lineHeight: '22px', margin: 0 }}>
-              {summaryText}
-              {loading && <span style={{ color: 'var(--mint)' }}>|</span>}
-            </p>
+            <p style={{ fontSize: '14px', color: 'var(--muted)', margin: 0 }}>No summary generated yet. Click Generate to create one.</p>
           )}
         </div>
 
-        <button onClick={handleShare} className="b4" style={{ width: '100%', padding: '16px', marginBottom: '2rem', display: 'block', textAlign: 'center' }}>
+        <button 
+          onClick={handleShare} 
+          className="b4" 
+          disabled={!latestSummary || isGenerating}
+          style={{ width: '100%', padding: '16px', marginBottom: '2rem', display: 'block', textAlign: 'center', opacity: (!latestSummary || isGenerating) ? 0.5 : 1 }}
+        >
           Share with doctor
         </button>
 
@@ -127,6 +169,9 @@ export default function SummaryScreen() {
         @keyframes shimmer {
           0%, 100% { opacity: 0.3; }
           50% { opacity: 0.6; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

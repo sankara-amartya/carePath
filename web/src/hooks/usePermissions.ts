@@ -30,16 +30,16 @@ export const PERMISSIONS: Record<Role, Set<Action>> = {
   [Role.PLATFORM_ADMIN]: new Set(Object.values(Action)),
 };
 
-export const canDo = (role: Role, action: Action): boolean => {
+export const canDo = (role: Role | null, action: Action): boolean => {
+  if (!role) return false;
   return PERMISSIONS[role]?.has(action) ?? false;
 };
 
 export function usePermissions() {
   const { user, isLoaded } = useUser();
   
-  // For development, defaulting to PRIMARY_CAREGIVER
-  // In real app: const userRole = (user?.publicMetadata?.role as Role) || Role.PRIMARY_CAREGIVER;
-  const userRole = Role.PRIMARY_CAREGIVER;
+  // Read the role from Clerk's public metadata (set by our backend during onboarding/invites)
+  const userRole = (user?.publicMetadata?.role as Role) || null;
 
   const can = (action: Action): boolean => {
     if (!isLoaded) return false;

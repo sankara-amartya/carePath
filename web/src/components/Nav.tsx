@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Pill, Book, Users, Activity } from 'lucide-react';
+import { Home, Pill, Book, Users, Activity, BookOpen } from 'lucide-react';
 
 export default function Nav() {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ export default function Nav() {
     { href: '/medications', label: 'Meds', icon: Pill },
     { href: '/journal', label: 'Journal', icon: Book },
     { href: '/team', label: 'Team', icon: Users },
+    { href: '/manual', label: 'Help', icon: BookOpen },
   ];
 
   return (
