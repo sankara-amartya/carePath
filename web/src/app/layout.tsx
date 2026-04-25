@@ -12,8 +12,13 @@ const dmSerif = DM_Serif_Display({
   variable: "--font-dm-serif",
   subsets: ["latin"],
   weight: ["400"],
-  style: ["normal", "italic"]
+  style: ["normal", "italic"],
 });
+
+import { ClerkProvider } from "@clerk/nextjs";
+import { TRPCProvider } from "@/components/TRPCProvider";
+import { PatientProvider } from "@/context/PatientContext";
+import { AppLayout } from "@/components/AppLayout";
 
 export const metadata: Metadata = {
   title: "CarePath Dashboard",
@@ -26,8 +31,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
-      <body>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
+        <body>
+          <TRPCProvider>
+            <PatientProvider>
+              <AppLayout>
+                {children}
+              </AppLayout>
+            </PatientProvider>
+          </TRPCProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

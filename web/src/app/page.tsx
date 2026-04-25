@@ -1,88 +1,130 @@
 "use client";
 
 import React from "react";
+import Link from 'next/link';
+import { trpc } from "@/lib/trpc";
+import { usePatient } from "@/context/PatientContext";
+import { Loader2, Pill, Activity, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
+  const { patientId } = usePatient();
+
+  // ── tRPC Queries for Real Data ────────────────────────────────────────────
+  const { data: medications, isLoading: medsLoading } = trpc.medications.list.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const { data: todayLogs } = trpc.medicationLogs.today.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const { data: latestCheckin, isLoading: checkinLoading } = trpc.healthChecks.latest.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  // ── Calculate Real Stats ──────────────────────────────────────────────────
+  const totalMeds = medications?.length || 0;
+  const takenMeds = todayLogs?.filter(l => l.status === 'taken').length || 0;
+  const adherence = totalMeds > 0 ? Math.round((takenMeds / totalMeds) * 100) : 0;
+
+  if (medsLoading || checkinLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+        <Loader2 className="animate-spin" size={32} color="var(--mint)" />
+      </div>
+    );
+  }
+
   return (
     <div className="root">
       <div className="hero">
         <div className="hero-tag">
-          <div className="hero-dot"></div>Design system v1.0
+          <div className="hero-dot"></div>Live Care Monitoring
         </div>
         <h1 className="hero-title">
           CarePath<br />
           <em>Dashboard</em>
         </h1>
         <p className="hero-sub">
-          Visual language, component library, and UX principles for the CarePath elder care platform — inspired by warmth, trust, and calm clarity.
+          Real-time health monitoring and medication tracking powered by type-safe tRPC and AI summaries.
         </p>
         <div className="hero-btns">
-          <button className="btn-primary">Daily Overview</button>
-          <button className="btn-ghost">View Patient Logs</button>
+          <Link href="/checkin" className="btn-primary" style={{ textDecoration: 'none' }}>Daily Check-in</Link>
+          <Link href="/medications" className="btn-ghost" style={{ textDecoration: 'none' }}>Medication Logs</Link>
         </div>
       </div>
 
       <div className="sec">
-        <div className="sec-label">Overview</div>
-        <div className="sec-title">Health Check-in · Today</div>
-        <p className="sec-sub">Dad's pain score has been trending up over the last 5 days. Consider mentioning this at Thursday's appointment.</p>
+        <div className="sec-label">Status Overview</div>
+        <div className="sec-title">Today&apos;s Health Metrics</div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '20px' }}>
+        {latestCheckin ? (
+          <p className="sec-sub">
+            Last check-in recorded at {new Date(latestCheckin.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. 
+            Pain is rated at {latestCheckin.pain}/5 and mood is {latestCheckin.mood}/5.
+          </p>
+        ) : (
+          <p className="sec-sub">No health check-in recorded for today yet. Please complete a check-in to see trends.</p>
+        )}
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', marginBottom: '20px' }}>
           <div className="card-stat">
-            <div className="stat-val">94%</div>
-            <div className="stat-lbl">Adherence this week</div>
+            <div className="stat-val">{adherence}%</div>
+            <div className="stat-lbl">Meds Taken Today</div>
           </div>
           <div className="card-stat" style={{ background: 'rgba(201,148,58,.07)', borderColor: 'rgba(201,148,58,.15)' }}>
-            <div className="stat-val" style={{ color: 'var(--gold)' }}>3.8</div>
-            <div className="stat-lbl">Avg pain score</div>
+            <div className="stat-val" style={{ color: 'var(--gold)' }}>{latestCheckin?.pain || '--'}</div>
+            <div className="stat-lbl">Latest Pain Score</div>
           </div>
           <div className="card-stat">
-            <div className="stat-val">12d</div>
-            <div className="stat-lbl">Streak ✓</div>
+            <div className="stat-val">{takenMeds}/{totalMeds}</div>
+            <div className="stat-lbl">Doses Logged</div>
           </div>
-        </div>
-
-        <div className="badge-row" style={{ marginBottom:('20px') }}>
-          <span className="badge badge-mint">Taken</span>
-          <span className="badge badge-gold">Due soon</span>
-          <span className="badge badge-red">Missed</span>
-          <span className="badge badge-gray">Scheduled</span>
         </div>
 
         <div className="comp-grid">
+          {/* Real Meds Summary */}
           <div className="card-feat">
             <div className="card-feat-icon" style={{ background: 'rgba(93,202,165,.12)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#5DCAA5" strokeWidth="1.2"/><path d="M5 8l2 2 4-4" stroke="#5DCAA5" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              <Pill size={16} color="var(--mint)" />
             </div>
-            <div className="card-feat-title">Pill verified</div>
-            <div className="card-feat-desc">Lisinopril 10mg · Confirmed correct by AI vision · 8:03 AM</div>
-          </div>
-          <div className="card-feat">
-            <div className="card-feat-icon" style={{ background: 'rgba(201,148,58,.12)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v5l3 3" stroke="#C9943A" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="8" r="6" stroke="#C9943A" strokeWidth="1.2"/></svg>
+            <div className="card-feat-title">Medication Status</div>
+            <div className="card-feat-desc">
+              {totalMeds === 0 ? "No medications added yet." : `${takenMeds} of ${totalMeds} doses recorded for today.`}
             </div>
-            <div className="card-feat-title">Dose due</div>
-            <div className="card-feat-desc">Metformin 500mg · Due in 20 minutes · Reminder sent</div>
           </div>
-          <div className="card-feat" style={{ borderColor: 'rgba(93,202,165,.2)' }}>
-            <div className="card-feat-icon" style={{ background: 'rgba(93,202,165,.1)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 13s1-4 5-4 5 4 5 4" stroke="#5DCAA5" strokeWidth="1.2" strokeLinecap="round"/><circle cx="8" cy="6" r="2.5" stroke="#5DCAA5" strokeWidth="1.2"/></svg>
+
+          {/* Real Health Check Summary */}
+          <div className="card-feat" style={{ borderColor: latestCheckin ? 'rgba(93,202,165,.2)' : 'rgba(201,148,58,.2)' }}>
+            <div className="card-feat-icon" style={{ background: latestCheckin ? 'rgba(93,202,165,.1)' : 'rgba(201,148,58,.1)' }}>
+              <Activity size={16} color={latestCheckin ? "var(--mint)" : "var(--gold)"} />
             </div>
-            <div className="card-feat-title">Weekly summary</div>
-            <div className="card-feat-desc">AI-generated · Last 7 days · Ready to share with doctor</div>
+            <div className="card-feat-title">Daily Vitals</div>
+            <div className="card-feat-desc">
+              {latestCheckin ? "Health check-in completed. All trends visible in Journal." : "Daily check-in pending. Tap button above to start."}
+            </div>
           </div>
+
+          {/* AI Summary Link */}
+          <Link href="/summary" style={{ textDecoration: 'none' }} className="card-feat">
+            <div className="card-feat-icon" style={{ background: 'rgba(255,255,255,.05)' }}>
+              <FileText size={16} color="var(--muted)" />
+            </div>
+            <div className="card-feat-title">Weekly AI Summary</div>
+            <div className="card-feat-desc">Generate a concise report for the primary physician based on this week&apos;s data.</div>
+          </Link>
+
+          {/* Alerts Placeholder (Could be wired to trpc.alerts later) */}
           <div className="card-feat">
             <div className="card-feat-icon" style={{ background: 'rgba(220,80,80,.1)' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v6M8 11v1.5" stroke="#E07070" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="8" r="6" stroke="#E07070" strokeWidth="1.2"/></svg>
+              <AlertCircle size={16} color="var(--alert)" />
             </div>
-            <div className="card-feat-title">Anomaly alert</div>
-            <div className="card-feat-desc">Appetite down 3 days in a row · Check in with Dad</div>
+            <div className="card-feat-title">Safety Alerts</div>
+            <div className="card-feat-desc">No critical anomalies detected in the last 24 hours.</div>
           </div>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <div className="sec-title">Search Logs..</div>
-          <input className="inp" placeholder="Search medications, logs, team members..." readOnly />
         </div>
       </div>
       
@@ -90,7 +132,7 @@ export default function Home() {
         <h3>Need to notify the Doctor?</h3>
         <p>Send an AI generated weekly summary directly to the provider portal.</p>
         <div className="cta-btns">
-            <button className="btn-primary">Generate Report ↗</button>
+          <Link href="/summary" className="btn-primary" style={{ textDecoration: 'none' }}>Generate Report ↗</Link>
         </div>
       </div>
     </div>

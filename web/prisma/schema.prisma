@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── 1. USERS ───────────────────────────────────────────────────────────────
+// One row per person (synced from Clerk on first login)
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Clerk's user ID — links auth to your DB
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  careTeamMembers CareTeamMember[]
+  medicationLogs  MedicationLog[]
+  healthChecks    HealthCheck[]
+  resolvedAlerts  Alert[]          @relation("ResolvedBy")
+}
+
+// ─── 2. PATIENTS ────────────────────────────────────────────────────────────
+// The elderly person being cared for
+model Patient {
+  id               String   @id @default(cuid())
+  name             String
+  dateOfBirth      DateTime
+  conditions       String[] // e.g. ["Type 2 Diabetes", "Hypertension"]
+  emergencyContact String? // "Jane Doe — 9876543210"
+  createdAt        DateTime @default(now())
+
+  // Relations
+  careTeam     CareTeamMember[]
+  medications  Medication[]
+  healthChecks HealthCheck[]
+  alerts       Alert[]
+  summaries    AiSummary[]
+}
+
+// ─── 3. CARE TEAM ───────────────────────────────────────────────────────────
+// Links users to patients with a role
+// One user can be on multiple patients' care teams
+model CareTeamMember {
+  id       String   @id @default(cuid())
+  role     Role // PRIMARY_CAREGIVER, DOCTOR, etc.
+  joinedAt DateTime @default(now())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([patientId, userId]) // a user can only have ONE role per patient
+}
+
+// ─── 4. MEDICATIONS ─────────────────────────────────────────────────────────
+model Medication {
+  id            String   @id @default(cuid())
+  name          String // "Metformin"
+  dosage        String // "500mg"
+  frequency     String // "twice daily"
+  scheduleTimes String[] // ["08:00", "20:00"]
+  notes         String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  logs MedicationLog[]
+}
+
+// ─── 5. MEDICATION LOGS ─────────────────────────────────────────────────────
+// One row every time a dose is logged
+model MedicationLog {
+  id           String           @id @default(cuid())
+  status       MedicationStatus // taken | skipped | missed
+  photoUrl     String? // Cloudflare R2 URL
+  aiVerified   Boolean? // null = not checked, true = confirmed, false = mismatch
+  aiConfidence Float? // 0.0 - 1.0
+  notes        String?
+  loggedAt     DateTime         @default(now())
+
+  medicationId String
+  medication   Medication @relation(fields: [medicationId], references: [id])
+
+  loggedById String
+  loggedBy   User   @relation(fields: [loggedById], references: [id])
+}
+
+// ─── 6. HEALTH CHECK-INS ────────────────────────────────────────────────────
+// Daily 1-5 slider values
+model HealthCheck {
+  id         String   @id @default(cuid())
+  pain       Int // 1-5
+  mood       Int // 1-5
+  appetite   Int // 1-5
+  mobility   Int // 1-5
+  energy     Int // 1-5
+  notes      String? // text notes
+  voiceUrl   String? // Cloudflare R2 URL for audio
+  transcript String? // Whisper output
+  checkedAt  DateTime @default(now())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  recordedById String
+  recordedBy   User   @relation(fields: [recordedById], references: [id])
+}
+
+// ─── 7. ALERTS ──────────────────────────────────────────────────────────────
+model Alert {
+  id         String    @id @default(cuid())
+  type       AlertType // missed_dose | anomaly | critical_vital
+  severity   Severity // low | medium | high | critical
+  message    String
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  resolvedById String?
+  resolvedBy   User?   @relation("ResolvedBy", fields: [resolvedById], references: [id])
+}
+
+// ─── 8. AI SUMMARIES ────────────────────────────────────────────────────────
+model AiSummary {
+  id          String   @id @default(cuid())
+  weekStart   DateTime
+  weekEnd     DateTime
+  content     String // Full Claude response (markdown)
+  generatedAt DateTime @default(now())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+}
+
+// ─── ENUMS ──────────────────────────────────────────────────────────────────
+enum Role {
+  PRIMARY_CAREGIVER
+  SECONDARY_CAREGIVER
+  DOCTOR
+  PATIENT
+  AGENCY_ADMIN
+  PLATFORM_ADMIN
+}
+
+enum MedicationStatus {
+  taken
+  skipped
+  missed
+}
+
+enum AlertType {
+  missed_dose
+  anomaly
+  critical_vital
+}
+
+enum Severity {
+  low
+  medium
+  high
+  critical
+}

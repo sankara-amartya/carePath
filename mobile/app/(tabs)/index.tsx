@@ -7,32 +7,12 @@ import {
   ScrollView, 
   TouchableOpacity 
 } from 'react-native';
-import { 
-  useFonts, 
-  DMSans_400Regular, 
-  DMSans_500Medium, 
-  DMSans_600SemiBold 
-} from '@expo-google-fonts/dm-sans';
-import { 
-  DMSerifDisplay_400Regular 
-} from '@expo-google-fonts/dm-serif-display';
-import { colors, spacing, border } from './theme';
+import { colors, spacing, border } from '../../theme';
 
 export default function App() {
-  let [fontsLoaded] = useFonts({
-    DMSans_400Regular,
-    DMSans_500Medium,
-    DMSans_600SemiBold,
-    DMSerifDisplay_400Regular,
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <View style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           
           {/* Top Bar */}
@@ -97,7 +77,7 @@ export default function App() {
           </TouchableOpacity>
 
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
