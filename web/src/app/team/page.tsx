@@ -1,21 +1,8 @@
 "use client";
 
-/**
- * /team — Care Team Management Page
- *
- * Replaces the old "Team Placeholder" stub.
- *
- * Features:
- *  - Lists all care team members from the DB (trpc.careTeam.list)
- *  - Shows role badge per member (Primary Caregiver, Doctor, etc.)
- *  - Invite new member by email + role (trpc.careTeam.invite)
- *  - Remove member from team (trpc.careTeam.remove)
- *  - MANAGE_TEAM permission gate — only Primary Caregiver / Admin can invite
- */
-
 import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { UserPlus, Trash2, X, Loader2 } from "lucide-react";
+import { UserPlus, Trash2, X, Loader2, Users } from "lucide-react";
 import { usePatient } from "@/context/PatientContext";
 import { trpc } from "@/lib/trpc";
 import { usePermissions, Action, Role } from "@/hooks/usePermissions";
@@ -38,6 +25,15 @@ const ROLE_BADGE: Record<string, string> = {
   PLATFORM_ADMIN: "badge-red",
 };
 
+const ROLE_COLORS: Record<string, string> = {
+  PRIMARY_CAREGIVER: "linear-gradient(135deg, #5DCAA5, #2A9060)",
+  SECONDARY_CAREGIVER: "linear-gradient(135deg, #7A9480, #4A6A50)",
+  DOCTOR: "linear-gradient(135deg, #C9943A, #9A6F2A)",
+  PATIENT: "linear-gradient(135deg, #8B7EC8, #5C4FA0)",
+  AGENCY_ADMIN: "linear-gradient(135deg, #E07070, #B04040)",
+  PLATFORM_ADMIN: "linear-gradient(135deg, #E07070, #B04040)",
+};
+
 type RoleValue =
   | "PRIMARY_CAREGIVER"
   | "SECONDARY_CAREGIVER"
@@ -53,23 +49,18 @@ export default function TeamPage() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<RoleValue>("SECONDARY_CAREGIVER");
 
-  // ── tRPC queries ──────────────────────────────────────────────────────────
-  const {
-    data: members,
-    isLoading,
-    refetch,
-  } = trpc.careTeam.list.useQuery(
+  const { data: patient } = trpc.patients.get.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const { data: members, isLoading, refetch } = trpc.careTeam.list.useQuery(
     { patientId: patientId! },
     { enabled: !!patientId }
   );
 
   const inviteMutation = trpc.careTeam.invite.useMutation({
-    onSuccess: () => {
-      refetch();
-      setInviteOpen(false);
-      setEmail("");
-      setRole("SECONDARY_CAREGIVER");
-    },
+    onSuccess: () => { refetch(); setInviteOpen(false); setEmail(""); setRole("SECONDARY_CAREGIVER"); },
   });
 
   const removeMutation = trpc.careTeam.remove.useMutation({
@@ -81,211 +72,96 @@ export default function TeamPage() {
     inviteMutation.mutate({ patientId, email, role });
   };
 
-  // ── No patient guard ──────────────────────────────────────────────────────
   if (!patientId) {
     return (
-      <div style={{ padding: "1.5rem" }}>
-        <div
-          style={{
-            backgroundColor: "rgba(201,148,58,0.1)",
-            border: "1px solid rgba(201,148,58,0.3)",
-            borderRadius: "var(--radius)",
-            padding: "1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ color: "var(--gold)", fontWeight: 500, margin: 0 }}>
-            No patient selected. Please select a patient from the sidebar.
-          </p>
-        </div>
-      </div>
+      <div className="page-content"><div className="no-patient-banner"><p>No patient selected.</p></div></div>
     );
   }
 
   return (
-    <div style={{ padding: "1.5rem", paddingBottom: "6rem", minHeight: "100vh" }}>
-      {/* ── Header ── */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h1 className="sec-title" style={{ margin: 0 }}>
-          Care team
-        </h1>
+    <div className="page-content" style={{ padding: "24px", paddingBottom: "6rem" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+        <div>
+          <h1 style={{ fontFamily: "var(--font-dm-serif)", fontSize: "24px", margin: "0 0 4px" }}>
+            {patient?.name ? `${patient.name}'s care team` : "Care team"}
+          </h1>
+          <p style={{ color: "var(--muted)", fontSize: "13px", margin: 0 }}>
+            {members?.length || 0} member{(members?.length || 0) !== 1 ? "s" : ""}
+          </p>
+        </div>
         {can(Action.MANAGE_TEAM) && (
-          <button
-            className="btn-primary"
-            onClick={() => setInviteOpen(true)}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            <UserPlus size={16} />
-            Invite
+          <button onClick={() => setInviteOpen(true)} className="btn-primary" style={{ padding: "8px 16px", fontSize: "13px" }}>
+            <UserPlus size={15} /> Invite
           </button>
         )}
       </div>
 
-      {/* ── Loading ── */}
       {isLoading && (
         <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
-          <Loader2 size={24} style={{ animation: "spin 1s linear infinite" }} />
+          <Loader2 size={24} style={{ animation: "spin 1s linear infinite" }} color="var(--mint)" />
         </div>
       )}
 
-      {/* ── Empty state ── */}
       {!isLoading && (!members || members.length === 0) && (
-        <div style={{ textAlign: "center", padding: "3rem", color: "var(--muted)" }}>
-          <p>No care team members yet.</p>
-          {can(Action.MANAGE_TEAM) && (
-            <p style={{ fontSize: "13px" }}>Invite the first member above.</p>
-          )}
+        <div className="empty-state">
+          <Users size={40} color="var(--muted)" style={{ marginBottom: "12px" }} />
+          <p style={{ fontWeight: 600, margin: "0 0 4px" }}>No team members yet</p>
+          <p style={{ color: "var(--muted)", fontSize: "13px", margin: 0 }}>Invite caregivers and doctors to collaborate.</p>
         </div>
       )}
 
-      {/* ── Members list ── */}
-      {members?.map((member) => (
-        <div
-          key={member.id}
-          className="card-feat"
-          style={{
-            marginBottom: "1rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            {/* Avatar circle with initials */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--sage-light)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "var(--ink)",
-                  flexShrink: 0,
-                }}
-              >
-                {member.user.name
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toUpperCase() || "?"}
+      {/* Members */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {members?.map((member) => (
+          <div key={member.id} className="card-feat" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{
+                width: "42px", height: "42px", borderRadius: "12px",
+                background: ROLE_COLORS[member.role] || "var(--sage-light)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "14px", fontWeight: 700, color: "#fff", flexShrink: 0,
+              }}>
+                {member.user.name?.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() || "?"}
               </div>
               <div>
-                <p style={{ margin: 0, fontWeight: 600, fontSize: "15px" }}>
-                  {member.user.name}
-                </p>
-                <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--muted)" }}>
-                  {member.user.email}
-                </p>
+                <p style={{ margin: "0 0 2px", fontWeight: 600, fontSize: "14px" }}>{member.user.name}</p>
+                <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)" }}>{member.user.email}</p>
               </div>
             </div>
-            <span className={`badge ${ROLE_BADGE[member.role] || "badge-gray"}`}>
-              {ROLE_LABELS[member.role] || member.role}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span className={`badge ${ROLE_BADGE[member.role] || "badge-gray"}`}>
+                {ROLE_LABELS[member.role] || member.role}
+              </span>
+              {can(Action.MANAGE_TEAM) && (
+                <button
+                  onClick={() => removeMutation.mutate({ memberId: member.id })}
+                  disabled={removeMutation.isPending}
+                  className="btn-icon"
+                  style={{ width: "32px", height: "32px" }}
+                  title="Remove member"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
           </div>
+        ))}
+      </div>
 
-          {can(Action.MANAGE_TEAM) && (
-            <button
-              onClick={() => removeMutation.mutate({ memberId: member.id })}
-              disabled={removeMutation.isPending}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--muted)",
-                cursor: "pointer",
-                padding: "8px",
-                borderRadius: "var(--radius-sm)",
-                transition: "color 0.15s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--alert)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--muted)")
-              }
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
-        </div>
-      ))}
-
-      {/* ── Invite dialog ── */}
+      {/* Invite dialog */}
       <Dialog.Root open={inviteOpen} onOpenChange={setInviteOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay
-            style={{
-              backgroundColor: "rgba(0,0,0,0.6)",
-              position: "fixed",
-              inset: 0,
-              zIndex: 100,
-            }}
-          />
-          <Dialog.Content
-            style={{
-              backgroundColor: "var(--ink2)",
-              borderRadius: "var(--radius)",
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "min(440px, 90vw)",
-              padding: "2rem",
-              zIndex: 101,
-              outline: "none",
-            }}
-          >
-            <Dialog.Title
-              style={{
-                margin: "0 0 1.5rem",
-                fontSize: "22px",
-                fontFamily: "var(--font-dm-serif)",
-              }}
-            >
-              Invite team member
-            </Dialog.Title>
+          <Dialog.Overlay className="dialog-overlay" />
+          <Dialog.Content className="dialog-content">
+            <Dialog.Title className="dialog-title">Invite team member</Dialog.Title>
             <Dialog.Close asChild>
-              <button
-                style={{
-                  position: "absolute",
-                  top: "24px",
-                  right: "24px",
-                  background: "none",
-                  border: "none",
-                  color: "var(--muted)",
-                  cursor: "pointer",
-                }}
-              >
-                <X size={20} />
-              </button>
+              <button className="dialog-close"><X size={18} /></button>
             </Dialog.Close>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <input
-                className="inp"
-                type="email"
-                placeholder="Email address *"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <select
-                className="inp"
-                value={role}
-                onChange={(e) => setRole(e.target.value as RoleValue)}
-                style={{ cursor: "pointer" }}
-              >
+              <input className="inp" type="email" placeholder="Email address *" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <select className="inp" value={role} onChange={(e) => setRole(e.target.value as RoleValue)} style={{ cursor: "pointer" }}>
                 <option value="SECONDARY_CAREGIVER">Secondary Caregiver</option>
                 <option value="DOCTOR">Doctor</option>
                 <option value="PATIENT">Patient</option>
@@ -294,29 +170,15 @@ export default function TeamPage() {
             </div>
 
             {inviteMutation.isError && (
-              <p style={{ color: "var(--alert)", fontSize: "13px", marginTop: "8px" }}>
-                {inviteMutation.error.message}
-              </p>
+              <div className="form-error" style={{ marginTop: "8px" }}>{inviteMutation.error.message}</div>
             )}
 
-            <button
-              className="btn-primary"
-              style={{
-                width: "100%",
-                justifyContent: "center",
-                padding: "14px",
-                marginTop: "1.5rem",
-              }}
-              onClick={handleInvite}
-              disabled={inviteMutation.isPending || !email}
-            >
+            <button className="btn-primary" style={{ width: "100%", justifyContent: "center", padding: "14px", marginTop: "20px" }} onClick={handleInvite} disabled={inviteMutation.isPending || !email}>
               {inviteMutation.isPending ? "Sending invite…" : "Send invite"}
             </button>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

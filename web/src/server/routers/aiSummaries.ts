@@ -35,16 +35,16 @@ export const aiSummariesRouter = router({
         ctx.db.medicationLog.findMany({
           where: {
             medication: { patientId: input.patientId },
-            takenAt: { gte: input.weekStart, lte: input.weekEnd },
+            loggedAt: { gte: input.weekStart, lte: input.weekEnd },
           },
           include: { medication: true },
         }),
         ctx.db.healthCheck.findMany({
           where: {
             patientId: input.patientId,
-            createdAt: { gte: input.weekStart, lte: input.weekEnd },
+            checkedAt: { gte: input.weekStart, lte: input.weekEnd },
           },
-          orderBy: { createdAt: "asc" },
+          orderBy: { checkedAt: "asc" },
         }),
         ctx.db.alert.findMany({
           where: {
@@ -74,7 +74,7 @@ export const aiSummariesRouter = router({
       const checkSummary = healthChecks.length > 0
         ? healthChecks
             .map((c) => {
-              const date = c.createdAt.toLocaleDateString("en-US", { weekday: "short" });
+              const date = c.checkedAt.toLocaleDateString("en-US", { weekday: "short" });
               return `  ${date}: pain=${c.pain} mood=${c.mood} appetite=${c.appetite} mobility=${c.mobility} energy=${c.energy}${c.notes ? ` (${c.notes})` : ""}`;
             })
             .join("\n")
@@ -122,13 +122,28 @@ Keep it warm, concise, and actionable. Use plain language a family caregiver can
 
       let content: string;
 
+      const buildLocalSummary = (reason: string) => {
+        const avgScores = healthChecks.length > 0
+          ? `Average scores — pain: ${(healthChecks.reduce((s, c) => s + c.pain, 0) / healthChecks.length).toFixed(1)}, mood: ${(healthChecks.reduce((s, c) => s + c.mood, 0) / healthChecks.length).toFixed(1)}, energy: ${(healthChecks.reduce((s, c) => s + c.energy, 0) / healthChecks.length).toFixed(1)}, mobility: ${(healthChecks.reduce((s, c) => s + c.mobility, 0) / healthChecks.length).toFixed(1)}, appetite: ${(healthChecks.reduce((s, c) => s + c.appetite, 0) / healthChecks.length).toFixed(1)}`
+          : "No check-ins recorded this week.";
+        return `## Weekly Summary\n\nReport for ${weekRange}. ${reason}\n\n### Medication Adherence\n${adherenceSummary || "No medication logs this week."}\n\n### Health Trends\n${healthChecks.length} check-in(s) recorded.\n${avgScores}\n\n### Alerts & Concerns\n${alertSummary}\n\n### Recommendations\nContinue logging daily check-ins and medication doses for more accurate reports.`;
+      };
+
       if (genAI) {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent(prompt);
-        content = result.response.text();
+        try {
+          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+          const result = await model.generateContent(prompt);
+          content = result.response.text();
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "";
+          if (msg.includes("429") || msg.includes("quota")) {
+            content = buildLocalSummary("*AI generation temporarily unavailable (quota exceeded). Showing data-only summary.*");
+          } else {
+            content = buildLocalSummary(`*AI generation failed. Showing data-only summary.*`);
+          }
+        }
       } else {
-        // Fallback when no API key is configured
-        content = `## Weekly Summary\n\nSummary for ${weekRange}.\n\n*Configure GEMINI_API_KEY in .env to enable AI-generated summaries.*\n\n### Medication Adherence\n${adherenceSummary || "No data available."}\n\n### Health Trends\n${healthChecks.length} check-in(s) recorded this week.\n\n### Alerts & Concerns\n${alertSummary}`;
+        content = buildLocalSummary("*Configure GEMINI_API_KEY in .env to enable AI-generated summaries.*");
       }
 
       return ctx.db.aiSummary.create({

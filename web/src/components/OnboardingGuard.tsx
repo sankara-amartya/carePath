@@ -3,38 +3,52 @@
 import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { trpc } from '@/lib/trpc';
+import { usePatient } from '@/context/PatientContext';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { setPatientId } = usePatient();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+  // Check if user already has patients (recovery for stuck onboarding)
+  const { data: existingPatientsData, isLoading: patientsLoading } = trpc.patients.listForUser.useQuery(
+    undefined,
+    { enabled: isLoaded === true && isSignedIn === true }
+  );
+  const existingPatients = Array.isArray(existingPatientsData) ? existingPatientsData : [];
 
-    // Check if the user has a role assigned in their Clerk publicMetadata
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || patientsLoading) return;
+
     const hasRole = !!user.publicMetadata?.role;
     const isOnboardingPage = pathname === '/onboarding';
+    const hasPatients = existingPatients.length > 0;
 
-    if (!hasRole && !isOnboardingPage) {
-      // Brand new user with no role: Force them to onboarding to create a patient profile
+    if (!hasRole && hasPatients && isOnboardingPage) {
+      // Recovery: patient was created but Clerk metadata failed to update.
+      // Auto-select the first patient and go to dashboard.
+      setPatientId(existingPatients[0].id);
+      router.replace('/');
+    } else if (!hasRole && !hasPatients && !isOnboardingPage) {
+      // Brand new user with no role and no patients → onboarding
       router.replace('/onboarding');
     } else if (hasRole && isOnboardingPage) {
-      // Already onboarded user trying to access onboarding: Send them to dashboard
+      // Already onboarded user trying to access onboarding → dashboard
       router.replace('/');
     }
-  }, [isLoaded, isSignedIn, user, pathname, router]);
+  }, [isLoaded, isSignedIn, user, pathname, router, patientsLoading, existingPatients, setPatientId]);
 
-  // While Clerk is loading, or if they are being redirected, we can just show nothing (or a loader)
-  // to prevent a flash of the dashboard before the redirect kicks in.
-  if (!isLoaded) return null;
+  if (!isLoaded || patientsLoading) return null;
 
   const hasRole = !!user?.publicMetadata?.role;
   const isOnboardingPage = pathname === '/onboarding';
+  const hasPatients = existingPatients && existingPatients.length > 0;
 
-  // Prevent rendering the dashboard children if they belong on the onboarding page
-  if (isSignedIn && !hasRole && !isOnboardingPage) {
-    return null; 
+  // Prevent rendering dashboard if user needs onboarding
+  if (isSignedIn && !hasRole && !hasPatients && !isOnboardingPage) {
+    return null;
   }
 
   return <>{children}</>;

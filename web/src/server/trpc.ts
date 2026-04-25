@@ -6,6 +6,7 @@ import { db } from "./db";
 // Used to verify JWT tokens sent from the mobile app and web client
 export const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
+  publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
 });
 
 // ─── Context ────────────────────────────────────────────────────────────────
@@ -21,28 +22,13 @@ export async function createContext(opts: {
   let userId: string | null = null;
 
   try {
-    // Debug: Log the incoming request URL
-    console.log(`[tRPC Context] Authenticating request to: ${opts.req.url}`);
-
-    // Pass headers and URL explicitly to avoid any potential URL parsing issues
-    const requestState = await clerk.authenticateRequest({
-      request: opts.req,
-    });
-    
-    console.log(`[tRPC Context] Auth status: ${requestState.status}`);
+    const requestState = await clerk.authenticateRequest(opts.req);
 
     if (requestState.isSignedIn) {
       userId = requestState.toAuth().userId;
-      console.log(`[tRPC Context] User authenticated: ${userId}`);
-    } else {
-      console.log(`[tRPC Context] User not signed in. Reason: ${requestState.reason || 'Unknown'}`);
     }
   } catch (err) {
     console.error("Clerk Auth Error:", err);
-    // Log the error stack to see exactly where it fails
-    if (err instanceof Error) {
-      console.error(err.stack);
-    }
   }
 
   return { db, userId };

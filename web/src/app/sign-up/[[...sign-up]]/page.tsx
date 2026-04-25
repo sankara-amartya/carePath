@@ -26,6 +26,7 @@ export default function SignUpPage() {
       </div>
 
       <SignUp 
+        fallbackRedirectUrl="/onboarding"
         appearance={{
           elements: {
             formButtonPrimary: 'btn-primary',

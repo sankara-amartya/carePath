@@ -1,22 +1,14 @@
 "use client";
 
-/**
- * /checkin — Daily Health Check-in Page
- *
- * What changed from the static version:
- *  - Submit button now calls trpc.healthChecks.create.useMutation()
- *  - On success: navigates back to home and shows a confirmation
- *  - Loads today's existing check-in (trpc.healthChecks.latest) so if you've
- *    already checked in today, it pre-fills the sliders with today's values
- *  - Voice recording still UI-only (needs native audio API wiring in a later phase)
- */
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import * as Slider from "@radix-ui/react-slider";
-import { Mic, X, CheckCircle } from "lucide-react";
+import { Mic, X, CheckCircle, ArrowLeft } from "lucide-react";
 import { usePatient } from "@/context/PatientContext";
 import { trpc } from "@/lib/trpc";
+
+const SCORE_EMOJI = ["", "😣", "😟", "😐", "🙂", "😊"];
+const SCORE_LABELS = ["", "Very low", "Low", "Okay", "Good", "Great"];
 
 export default function CheckInPage() {
   const router = useRouter();
@@ -30,7 +22,11 @@ export default function CheckInPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // ── Load latest check-in to pre-fill sliders ─────────────────────────────
+  const { data: patient } = trpc.patients.get.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
   const { data: latest } = trpc.healthChecks.latest.useQuery(
     { patientId: patientId! },
     { enabled: !!patientId }
@@ -38,7 +34,6 @@ export default function CheckInPage() {
 
   useEffect(() => {
     if (latest) {
-      // Pre-fill with yesterday's values as a starting point
       setPain([latest.pain]);
       setMood([latest.mood]);
       setAppetite([latest.appetite]);
@@ -47,7 +42,6 @@ export default function CheckInPage() {
     }
   }, [latest]);
 
-  // ── Submit mutation ───────────────────────────────────────────────────────
   const checkinMutation = trpc.healthChecks.create.useMutation({
     onSuccess: () => {
       setSubmitted(true);
@@ -75,25 +69,17 @@ export default function CheckInPage() {
   ) => {
     const isLow = value[0] < 3;
     const accentColor = isLow ? "var(--gold)" : "var(--mint)";
-    const labels = ["", "Very low", "Low", "Okay", "Good", "Great"];
 
     return (
-      <div style={{ marginBottom: "1.5rem" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "8px",
-          }}
-        >
-          <span
-            style={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500 }}
-          >
-            {label}
-          </span>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: accentColor }}>
-            {value[0]} / 5 — {labels[value[0]]}
-          </span>
+      <div className="card-feat" style={{ marginBottom: "12px", padding: "16px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+          <span style={{ fontSize: "14px", fontWeight: 600 }}>{label}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "22px" }}>{SCORE_EMOJI[value[0]]}</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: accentColor }}>
+              {value[0]}/5
+            </span>
+          </div>
         </div>
         <Slider.Root
           value={value}
@@ -101,228 +87,118 @@ export default function CheckInPage() {
           max={5}
           min={1}
           step={1}
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            userSelect: "none",
-            touchAction: "none",
-            height: "20px",
-          }}
+          style={{ position: "relative", display: "flex", alignItems: "center", userSelect: "none", touchAction: "none", height: "24px" }}
         >
-          <Slider.Track
-            style={{
-              backgroundColor: "rgba(255,255,255,0.1)",
-              position: "relative",
-              flexGrow: 1,
-              borderRadius: "9999px",
-              height: "4px",
-            }}
-          >
-            <Slider.Range
-              style={{
-                position: "absolute",
-                backgroundColor: accentColor,
-                borderRadius: "9999px",
-                height: "100%",
-              }}
-            />
+          <Slider.Track style={{ backgroundColor: "rgba(255,255,255,0.08)", position: "relative", flexGrow: 1, borderRadius: "9999px", height: "6px" }}>
+            <Slider.Range style={{ position: "absolute", backgroundColor: accentColor, borderRadius: "9999px", height: "100%", transition: "background-color 0.3s" }} />
           </Slider.Track>
           <Slider.Thumb
-            style={{
-              display: "block",
-              width: "20px",
-              height: "20px",
-              backgroundColor: accentColor,
-              boxShadow: "0 0 0 2px var(--ink)",
-              borderRadius: "50%",
-            }}
+            style={{ display: "block", width: "22px", height: "22px", backgroundColor: accentColor, boxShadow: `0 0 0 3px var(--ink), 0 0 12px ${isLow ? 'rgba(201,148,58,0.3)' : 'rgba(93,202,165,0.3)'}`, borderRadius: "50%", transition: "background-color 0.3s, box-shadow 0.3s" }}
             aria-label={label}
           />
         </Slider.Root>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px" }}>
+          <span style={{ fontSize: "10px", color: "var(--muted)" }}>Low</span>
+          <span style={{ fontSize: "10px", color: "var(--muted)" }}>{SCORE_LABELS[value[0]]}</span>
+          <span style={{ fontSize: "10px", color: "var(--muted)" }}>High</span>
+        </div>
       </div>
     );
   };
 
-  // ── No patient guard ─────────────────────────────────────────────────────
   if (!patientId) {
     return (
-      <div style={{ padding: "1.5rem", minHeight: "100vh" }}>
-        <div
-          style={{
-            backgroundColor: "rgba(201,148,58,0.1)",
-            border: "1px solid rgba(201,148,58,0.3)",
-            borderRadius: "var(--radius)",
-            padding: "1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ color: "var(--gold)", fontWeight: 500, margin: 0 }}>
-            No patient selected. Please select a patient from the sidebar.
-          </p>
-        </div>
-      </div>
+      <div className="page-content"><div className="no-patient-banner"><p>No patient selected.</p></div></div>
     );
   }
 
-  // ── Success state ─────────────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div
-        style={{
-          padding: "1.5rem",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "1rem",
-        }}
-      >
-        <CheckCircle size={48} color="var(--mint)" />
-        <h2 style={{ fontFamily: "var(--font-dm-serif)", fontSize: "24px", margin: 0 }}>
-          Check-in saved!
-        </h2>
-        <p style={{ color: "var(--muted)", margin: 0 }}>
-          Returning to dashboard…
-        </p>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px" }}>
+        <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "rgba(93,202,165,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <CheckCircle size={32} color="var(--mint)" />
+        </div>
+        <h2 style={{ fontFamily: "var(--font-dm-serif)", fontSize: "24px", margin: 0 }}>Check-in saved!</h2>
+        <p style={{ color: "var(--muted)", margin: 0 }}>Returning to dashboard…</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "0", minHeight: "100vh", backgroundColor: "var(--ink)" }}>
-      <div
-        style={{
-          padding: "1.5rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
+    <div className="page-content" style={{ padding: "24px", paddingBottom: "6rem" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+        <button onClick={() => router.back()} className="btn-icon">
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 style={{ fontFamily: "var(--font-dm-serif)", fontSize: "24px", margin: 0 }}>
+            How is {patient?.name || 'the patient'} today?
+          </h1>
+          <p style={{ color: "var(--muted)", fontSize: "13px", margin: "4px 0 0" }}>Rate each area from 1–5</p>
+        </div>
+      </div>
+
+      {renderSlider("Pain", pain, setPain)}
+      {renderSlider("Mood", mood, setMood)}
+      {renderSlider("Appetite", appetite, setAppetite)}
+      {renderSlider("Mobility", mobility, setMobility)}
+      {renderSlider("Energy", energy, setEnergy)}
+
+      {/* Notes */}
+      <div className="form-group" style={{ marginTop: "8px" }}>
+        <label className="form-label">Notes</label>
+        <textarea
+          className="inp"
+          placeholder="Any observations? (optional)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          style={{ resize: "none" }}
+        />
+      </div>
+
+      {/* Voice note */}
+      <div className="card-feat" style={{ textAlign: "center", padding: "20px", marginBottom: "20px" }}>
+        <p style={{ fontSize: "13px", fontWeight: 500, margin: "0 0 16px" }}>Voice note (optional)</p>
+        <button
+          onMouseDown={() => setIsRecording(true)}
+          onMouseUp={() => setIsRecording(false)}
+          onMouseLeave={() => setIsRecording(false)}
+          onTouchStart={() => setIsRecording(true)}
+          onTouchEnd={() => setIsRecording(false)}
+          style={{
+            width: "56px", height: "56px", borderRadius: "50%",
+            backgroundColor: isRecording ? "rgba(220,80,80,0.15)" : "var(--sage-light)",
+            border: "none", display: "inline-flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", transition: "all 0.2s",
+          }}
+        >
+          {isRecording ? (
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "var(--alert)", animation: "pulse 1.5s infinite" }} />
+          ) : (
+            <Mic color="var(--ink)" size={22} />
+          )}
+        </button>
+        <p style={{ fontSize: "11px", color: "var(--muted)", margin: "8px 0 0" }}>
+          {isRecording ? "Recording… release to stop" : "Hold to record"}
+        </p>
+      </div>
+
+      {checkinMutation.isError && (
+        <div className="form-error" style={{ marginBottom: "12px" }}>
+          {checkinMutation.error.message}
+        </div>
+      )}
+
+      <button
+        onClick={handleSubmit}
+        className="btn-primary"
+        disabled={checkinMutation.isPending}
+        style={{ width: "100%", justifyContent: "center", padding: "16px", fontSize: "14px" }}
       >
-        <h1 style={{ fontFamily: "var(--font-dm-serif)", fontSize: "24px", margin: 0 }}>
-          How is Dad today?
-        </h1>
-        <button
-          onClick={() => router.back()}
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "50%",
-            backgroundColor: "rgba(255,255,255,0.1)",
-            border: "none",
-            color: "var(--muted)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-          }}
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      <div style={{ padding: "0 1.5rem 6rem" }}>
-        {renderSlider("Pain", pain, setPain)}
-        {renderSlider("Mood", mood, setMood)}
-        {renderSlider("Appetite", appetite, setAppetite)}
-        {renderSlider("Mobility", mobility, setMobility)}
-        {renderSlider("Energy", energy, setEnergy)}
-
-        {/* Notes */}
-        <div style={{ marginBottom: "1.5rem" }}>
-          <textarea
-            className="inp"
-            placeholder="Any notes? (optional)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            style={{ resize: "none", width: "100%", boxSizing: "border-box" }}
-          />
-        </div>
-
-        {/* Voice note */}
-        <div
-          style={{
-            marginTop: "0",
-            marginBottom: "1.5rem",
-            padding: "1.5rem",
-            backgroundColor: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.05)",
-            borderRadius: "var(--radius)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <p style={{ fontSize: "14px", fontWeight: 500, margin: "0 0 1.5rem 0" }}>
-            Add a voice note (optional)
-          </p>
-          <button
-            onMouseDown={() => setIsRecording(true)}
-            onMouseUp={() => setIsRecording(false)}
-            onMouseLeave={() => setIsRecording(false)}
-            onTouchStart={() => setIsRecording(true)}
-            onTouchEnd={() => setIsRecording(false)}
-            style={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "50%",
-              backgroundColor: isRecording
-                ? "rgba(220,80,80,0.2)"
-                : "var(--sage-light)",
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: "1rem",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-          >
-            {isRecording ? (
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--alert)",
-                  animation: "pulse 1.5s infinite",
-                }}
-              />
-            ) : (
-              <Mic color="var(--ink)" size={24} />
-            )}
-          </button>
-          <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>
-            {isRecording ? "Recording… release to stop" : "Hold to record"}
-          </p>
-        </div>
-
-        {/* Error message */}
-        {checkinMutation.isError && (
-          <p style={{ color: "var(--alert)", fontSize: "13px", marginBottom: "12px" }}>
-            Error: {checkinMutation.error.message}
-          </p>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          className="btn-primary"
-          disabled={checkinMutation.isPending}
-          style={{ width: "100%", justifyContent: "center", padding: "16px" }}
-        >
-          {checkinMutation.isPending ? "Saving…" : "Submit check-in"}
-        </button>
-      </div>
-
-      <style>{`
-        @keyframes pulse {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.2); opacity: 0.8; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
+        {checkinMutation.isPending ? "Saving…" : "Submit check-in"}
+      </button>
     </div>
   );
 }

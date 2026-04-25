@@ -41,11 +41,10 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
 
   const [trpcClient] = useState(() =>
     trpc.createClient({
-      transformer: superjson,
       links: [
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
-          // Attach Clerk session token to every request
+          transformer: superjson,
           async headers() {
             const token = await getToken();
             return token ? { Authorization: `Bearer ${token}` } : {};
