@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const genAI = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
 
 export const aiSummariesRouter = router({
   // Get the latest AI summary for a patient
@@ -122,20 +122,13 @@ Keep it warm, concise, and actionable. Use plain language a family caregiver can
 
       let content: string;
 
-      if (process.env.ANTHROPIC_API_KEY) {
-        const response = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1024,
-          messages: [{ role: "user", content: prompt }],
-        });
-
-        content = response.content
-          .filter((block): block is Anthropic.TextBlock => block.type === "text")
-          .map((block) => block.text)
-          .join("\n");
+      if (genAI) {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent(prompt);
+        content = result.response.text();
       } else {
         // Fallback when no API key is configured
-        content = `## Weekly Summary\n\nSummary for ${weekRange}.\n\n*Configure ANTHROPIC_API_KEY in .env to enable AI-generated summaries.*\n\n### Medication Adherence\n${adherenceSummary || "No data available."}\n\n### Health Trends\n${healthChecks.length} check-in(s) recorded this week.\n\n### Alerts & Concerns\n${alertSummary}`;
+        content = `## Weekly Summary\n\nSummary for ${weekRange}.\n\n*Configure GEMINI_API_KEY in .env to enable AI-generated summaries.*\n\n### Medication Adherence\n${adherenceSummary || "No data available."}\n\n### Health Trends\n${healthChecks.length} check-in(s) recorded this week.\n\n### Alerts & Concerns\n${alertSummary}`;
       }
 
       return ctx.db.aiSummary.create({
