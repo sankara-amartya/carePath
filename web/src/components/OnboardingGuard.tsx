@@ -12,41 +12,66 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const role = user?.publicMetadata?.role as string | undefined;
+  const isAdmin = role === 'PLATFORM_ADMIN';
+  const isAdminPage = pathname.startsWith('/admin');
+
   // Check if user already has patients (recovery for stuck onboarding)
   const { data: existingPatientsData, isLoading: patientsLoading } = trpc.patients.listForUser.useQuery(
     undefined,
-    { enabled: isLoaded === true && isSignedIn === true }
+    { enabled: isLoaded === true && isSignedIn === true && !isAdmin }
   );
   const existingPatients = Array.isArray(existingPatientsData) ? existingPatientsData : [];
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || patientsLoading) return;
+    if (!isLoaded || !isSignedIn) return;
 
-    const hasRole = !!user.publicMetadata?.role;
+    // ── Platform Admin routing ───────────────────────────────────────────
+    if (isAdmin) {
+      // If admin is NOT on an admin page → redirect to /admin
+      if (!isAdminPage && pathname !== '/sign-in' && pathname !== '/sign-up') {
+        router.replace('/admin');
+      }
+      return;
+    }
+
+    // ── Non-admin on /admin → kick to dashboard ─────────────────────────
+    if (isAdminPage) {
+      router.replace('/');
+      return;
+    }
+
+    if (patientsLoading) return;
+
+    const hasRole = !!role;
     const isOnboardingPage = pathname === '/onboarding';
     const hasPatients = existingPatients.length > 0;
 
     if (!hasRole && hasPatients && isOnboardingPage) {
-      // Recovery: patient was created but Clerk metadata failed to update.
-      // Auto-select the first patient and go to dashboard.
       setPatientId(existingPatients[0].id);
       router.replace('/');
     } else if (!hasRole && !hasPatients && !isOnboardingPage) {
-      // Brand new user with no role and no patients → onboarding
       router.replace('/onboarding');
     } else if (hasRole && isOnboardingPage) {
-      // Already onboarded user trying to access onboarding → dashboard
       router.replace('/');
     }
-  }, [isLoaded, isSignedIn, user, pathname, router, patientsLoading, existingPatients, setPatientId]);
+  }, [isLoaded, isSignedIn, user, pathname, router, patientsLoading, existingPatients, setPatientId, isAdmin, isAdminPage, role]);
 
-  if (!isLoaded || patientsLoading) return null;
+  if (!isLoaded) return null;
+
+  // Admin users skip patient loading
+  if (isAdmin) {
+    // Non-admin pages: redirect is in progress
+    if (!isAdminPage && pathname !== '/sign-in' && pathname !== '/sign-up') return null;
+    return <>{children}</>;
+  }
+
+  if (patientsLoading) return null;
 
   const hasRole = !!user?.publicMetadata?.role;
   const isOnboardingPage = pathname === '/onboarding';
   const hasPatients = existingPatients && existingPatients.length > 0;
 
-  // Prevent rendering dashboard if user needs onboarding
   if (isSignedIn && !hasRole && !hasPatients && !isOnboardingPage) {
     return null;
   }

@@ -12,7 +12,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   // Do not show the sidebar/nav on onboarding or auth pages
   const isAuthPage = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
   const isOnboarding = pathname === "/onboarding";
-  const hideNavigation = isAuthPage || isOnboarding;
+  const isAdminPage = pathname.startsWith("/admin");
+  const hideNavigation = isAuthPage || isOnboarding || isAdminPage;
 
   return (
     <OnboardingGuard>
