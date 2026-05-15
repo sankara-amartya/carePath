@@ -1,82 +1,142 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, border } from '../../theme';
 import { usePermissions, Action } from '../../hooks/usePermissions';
-
-type Medication = {
-  id: string;
-  name: string;
-  dosage: string;
-  time: string;
-  status: 'Done' | 'Due' | 'Missed' | 'Scheduled';
-};
-
-const MOCK_MEDS: Medication[] = [
-  { id: '1', name: 'Metformin', dosage: '500mg', time: '8:00 AM', status: 'Done' },
-  { id: '2', name: 'Lisinopril', dosage: '10mg', time: '12:00 PM', status: 'Due' },
-  { id: '3', name: 'Atorvastatin', dosage: '20mg', time: '8:00 PM', status: 'Scheduled' },
-];
+import { trpc } from '../../trpc/client';
+import { usePatient } from '../../context/PatientContext';
 
 export default function MedicationsScreen() {
   const { can } = usePermissions();
-  const [selectedMed, setSelectedMed] = useState<Medication | null>(null);
+  const { patientId } = usePatient();
+  const [selectedMedId, setSelectedMedId] = useState<string | null>(null);
+  const [logNotes, setLogNotes] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newMed, setNewMed] = useState({ name: '', dosage: '', frequency: '', notes: '' });
 
-  const handleLogClick = (med: Medication) => {
-    setSelectedMed(med);
+  const utils = trpc.useUtils();
+
+  const { data: medications, isLoading } = trpc.medications.list.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const { data: todayLogs } = trpc.medicationLogs.today.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const logMutation = trpc.medicationLogs.log.useMutation({
+    onSuccess: () => {
+      utils.medicationLogs.today.invalidate();
+      utils.medications.list.invalidate();
+      setSelectedMedId(null);
+      setLogNotes('');
+    },
+    onError: (err) => Alert.alert('Error', err.message),
+  });
+
+  const addMutation = trpc.medications.create.useMutation({
+    onSuccess: () => {
+      utils.medications.list.invalidate();
+      setShowAddModal(false);
+      setNewMed({ name: '', dosage: '', frequency: '', notes: '' });
+    },
+    onError: (err) => Alert.alert('Error', err.message),
+  });
+
+  function getMedStatus(medId: string): 'Done' | 'Due' | 'Missed' | 'Scheduled' {
+    const log = todayLogs?.find(l => l.medicationId === medId);
+    if (log?.status === 'taken') return 'Done';
+    if (log?.status === 'missed') return 'Missed';
+    if (log?.status === 'skipped') return 'Done';
+    return 'Due';
+  }
+
+  const selectedMed = medications?.find(m => m.id === selectedMedId);
+
+  const handleLogDose = (status: 'taken' | 'skipped') => {
+    if (!selectedMedId) return;
+    logMutation.mutate({ medicationId: selectedMedId, status, notes: logNotes || undefined });
   };
 
-  const closeBottomSheet = () => setSelectedMed(null);
+  const handleAddMed = () => {
+    if (!patientId || !newMed.name || !newMed.dosage || !newMed.frequency) return;
+    addMutation.mutate({
+      patientId: patientId!,
+      name: newMed.name,
+      dosage: newMed.dosage,
+      frequency: newMed.frequency,
+      notes: newMed.notes || undefined,
+    });
+  };
+
+  if (!patientId) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Text style={[styles.header, { textAlign: 'center', marginTop: spacing.xl }]}>No patient selected</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.header}>Today's medications</Text>
 
-        {MOCK_MEDS.map((med) => {
-          let badgeColor = colors.muted;
-          let badgeBg = 'rgba(255,255,255,.06)';
-          if (med.status === 'Done') {
-            badgeColor = colors.mint;
-            badgeBg = 'rgba(93,202,165,.2)';
-          } else if (med.status === 'Due') {
-            badgeColor = colors.gold;
-            badgeBg = 'rgba(201,148,58,.2)';
-          } else if (med.status === 'Missed') {
-            badgeColor = colors.alert;
-            badgeBg = 'rgba(224,112,112,.2)';
-          }
+        {isLoading ? (
+          <ActivityIndicator color={colors.mint} style={{ marginVertical: 40 }} />
+        ) : medications && medications.length > 0 ? (
+          medications.map((med) => {
+            const status = getMedStatus(med.id);
+            let badgeColor = colors.muted;
+            let badgeBg = 'rgba(255,255,255,.06)';
+            if (status === 'Done') {
+              badgeColor = colors.mint;
+              badgeBg = 'rgba(93,202,165,.2)';
+            } else if (status === 'Due') {
+              badgeColor = colors.gold;
+              badgeBg = 'rgba(201,148,58,.2)';
+            } else if (status === 'Missed') {
+              badgeColor = colors.alert;
+              badgeBg = 'rgba(224,112,112,.2)';
+            }
 
-          return (
-            <View key={med.id} style={styles.medCard}>
-              <View style={styles.medInfo}>
-                <Text style={styles.medName}>{med.name} {med.dosage}</Text>
-                <Text style={styles.medTime}>Scheduled: {med.time}</Text>
-                <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-                  <Text style={[styles.badgeText, { color: badgeColor }]}>{med.status}</Text>
+            return (
+              <View key={med.id} style={styles.medCard}>
+                <View style={styles.medInfo}>
+                  <Text style={styles.medName}>{med.name} {med.dosage}</Text>
+                  <Text style={styles.medTime}>{med.frequency}{med.scheduleTimes.length > 0 ? ` · ${med.scheduleTimes.join(', ')}` : ''}</Text>
+                  <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+                    <Text style={[styles.badgeText, { color: badgeColor }]}>{status}</Text>
+                  </View>
                 </View>
-              </View>
 
-              {can(Action.LOG_MEDICATION) && med.status !== 'Done' && (
-                <TouchableOpacity style={styles.btnPrimary} onPress={() => handleLogClick(med)}>
-                  <Text style={styles.btnText}>Log dose</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
-        })}
+                {can(Action.LOG_MEDICATION) && status !== 'Done' && (
+                  <TouchableOpacity style={styles.btnPrimary} onPress={() => setSelectedMedId(med.id)}>
+                    <Text style={styles.btnText}>Log dose</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          })
+        ) : (
+          <Text style={{ color: colors.muted, fontFamily: 'DMSans_400Regular', textAlign: 'center', marginTop: spacing.xl }}>
+            No medications added yet. Tap + to add one.
+          </Text>
+        )}
       </ScrollView>
 
       {can(Action.EDIT_MEDICATIONS) && (
-        <TouchableOpacity style={styles.fab}>
+        <TouchableOpacity style={styles.fab} onPress={() => setShowAddModal(true)}>
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
       )}
 
       {/* Log Dose Bottom Sheet Modal */}
-      <Modal visible={!!selectedMed} transparent animationType="slide" onRequestClose={closeBottomSheet}>
+      <Modal visible={!!selectedMedId} transparent animationType="slide" onRequestClose={() => setSelectedMedId(null)}>
         <View style={styles.modalOverlay}>
-          <TouchableOpacity style={{ flex: 1 }} onPress={closeBottomSheet} />
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => setSelectedMedId(null)} />
           <View style={styles.bottomSheet}>
             <Text style={styles.sheetTitle}>{selectedMed?.name} {selectedMed?.dosage}</Text>
             
@@ -86,22 +146,75 @@ export default function MedicationsScreen() {
                   <Text style={styles.cameraBtnText}>Take photo to verify</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={{color: colors.gold}}>AI verification disabled</Text>
+                <Text style={{color: colors.gold, fontFamily: 'DMSans_400Regular'}}>Photo verification not available</Text>
               )}
             </View>
 
-            <TouchableOpacity style={styles.ghostBtn}>
-              <Text style={styles.ghostBtnText}>Taken without photo</Text>
+            <TouchableOpacity style={styles.ghostBtn} onPress={() => handleLogDose('skipped')}>
+              <Text style={styles.ghostBtnText}>Skip this dose</Text>
             </TouchableOpacity>
 
             <TextInput
               style={styles.input}
               placeholder="Add notes (optional)"
               placeholderTextColor={colors.muted}
+              value={logNotes}
+              onChangeText={setLogNotes}
             />
 
-            <TouchableOpacity style={styles.submitBtn} onPress={closeBottomSheet}>
-              <Text style={styles.btnText}>Log dose taken</Text>
+            <TouchableOpacity
+              style={[styles.submitBtn, logMutation.isPending && { opacity: 0.6 }]}
+              onPress={() => handleLogDose('taken')}
+              disabled={logMutation.isPending}
+            >
+              <Text style={styles.btnText}>{logMutation.isPending ? 'Logging...' : 'Log dose taken'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Medication Modal */}
+      <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => setShowAddModal(false)} />
+          <View style={styles.bottomSheet}>
+            <Text style={styles.sheetTitle}>Add medication</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Medication name"
+              placeholderTextColor={colors.muted}
+              value={newMed.name}
+              onChangeText={(t) => setNewMed(prev => ({ ...prev, name: t }))}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Dosage (e.g. 500mg)"
+              placeholderTextColor={colors.muted}
+              value={newMed.dosage}
+              onChangeText={(t) => setNewMed(prev => ({ ...prev, dosage: t }))}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Frequency (e.g. Twice daily)"
+              placeholderTextColor={colors.muted}
+              value={newMed.frequency}
+              onChangeText={(t) => setNewMed(prev => ({ ...prev, frequency: t }))}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Notes (optional)"
+              placeholderTextColor={colors.muted}
+              value={newMed.notes}
+              onChangeText={(t) => setNewMed(prev => ({ ...prev, notes: t }))}
+            />
+
+            <TouchableOpacity
+              style={[styles.submitBtn, addMutation.isPending && { opacity: 0.6 }]}
+              onPress={handleAddMed}
+              disabled={addMutation.isPending}
+            >
+              <Text style={styles.btnText}>{addMutation.isPending ? 'Adding...' : 'Add medication'}</Text>
             </TouchableOpacity>
           </View>
         </View>

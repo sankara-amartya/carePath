@@ -26,6 +26,7 @@ export default function SignInPage() {
       </div>
 
       <SignIn 
+        fallbackRedirectUrl="/"
         appearance={{
           elements: {
             formButtonPrimary: 'btn-primary',

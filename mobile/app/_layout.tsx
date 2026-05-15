@@ -7,6 +7,7 @@ import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '../theme';
 import { TRPCProvider } from '../trpc/provider';
+import { PatientProvider } from '../context/PatientContext';
 
 const tokenCache = {
   async getToken(key: string) {
@@ -54,15 +55,17 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <TRPCProvider>
-        <SafeAreaProvider>
-          <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ink } }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="summary" />
-          </Stack>
-        </SafeAreaProvider>
+        <PatientProvider>
+          <SafeAreaProvider>
+            <StatusBar style="light" />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ink } }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+              <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="summary" />
+            </Stack>
+          </SafeAreaProvider>
+        </PatientProvider>
       </TRPCProvider>
     </ClerkProvider>
   );

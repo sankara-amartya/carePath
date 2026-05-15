@@ -24,12 +24,15 @@ export const alertsRouter = router({
   resolve: protectedProcedure
     .input(z.object({ alertId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUniqueOrThrow({
+        where: { clerkId: ctx.userId },
+      });
       return ctx.db.alert.update({
         where: { id: input.alertId },
         data: {
           resolved: true,
           resolvedAt: new Date(),
-          resolvedById: ctx.userId,
+          resolvedById: user.id,
         },
       });
     }),

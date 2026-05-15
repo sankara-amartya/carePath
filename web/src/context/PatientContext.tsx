@@ -17,7 +17,9 @@
  * For now, we seed with a hardcoded demo patient ID that matches your Neon DB.
  */
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@clerk/nextjs";
 
 type PatientContextType = {
   patientId: string | null;
@@ -30,6 +32,7 @@ const PatientContext = createContext<PatientContextType>({
 });
 
 export function PatientProvider({ children }: { children: React.ReactNode }) {
+  const { isSignedIn } = useAuth();
   const [patientId, setPatientIdState] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("carepath_patient_id") ?? null;
@@ -41,6 +44,18 @@ export function PatientProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("carepath_patient_id", id);
     setPatientIdState(id);
   };
+
+  // Always fetch patients when signed in so sidebar can show them
+  const { data: patientsData } = trpc.patients.listForUser.useQuery(undefined, {
+    enabled: isSignedIn === true,
+  });
+  const patients = Array.isArray(patientsData) ? patientsData : [];
+
+  useEffect(() => {
+    if (!patientId && patients.length > 0) {
+      setPatientId(patients[0].id);
+    }
+  }, [patientId, patients]);
 
   return (
     <PatientContext.Provider value={{ patientId, setPatientId }}>

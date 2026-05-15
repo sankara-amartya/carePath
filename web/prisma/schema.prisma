@@ -27,6 +27,7 @@ model User {
   medicationLogs  MedicationLog[]
   healthChecks    HealthCheck[]
   resolvedAlerts  Alert[]          @relation("ResolvedBy")
+  auditLogs       AuditLog[]
 }
 
 // ─── 2. PATIENTS ────────────────────────────────────────────────────────────
@@ -150,6 +151,29 @@ model AiSummary {
 }
 
 // ─── ENUMS ──────────────────────────────────────────────────────────────────
+
+// ─── 9. AUDIT LOGS ──────────────────────────────────────────────────────────
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // "USER_LOGIN", "PATIENT_CREATED", "MED_LOGGED", etc.
+  entity    String   // "User", "Patient", "Medication", etc.
+  entityId  String   // ID of the affected record
+  detail    String?  // Additional context
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// ─── 10. ROLE PERMISSIONS (dynamic) ─────────────────────────────────────────
+model RolePermission {
+  id     String @id @default(cuid())
+  role   Role
+  action String // Action name string
+
+  @@unique([role, action])
+}
+
 enum Role {
   PRIMARY_CAREGIVER
   SECONDARY_CAREGIVER

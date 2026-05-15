@@ -6,6 +6,7 @@ import { healthChecksRouter } from "./healthChecks";
 import { careTeamRouter } from "./careTeam";
 import { alertsRouter } from "./alerts";
 import { aiSummariesRouter } from "./aiSummaries";
+import { adminRouter } from "./admin";
 
 // ─── Root router ────────────────────────────────────────────────────────────
 // This combines all sub-routers into one. The mobile app and web dashboard
@@ -18,6 +19,7 @@ export const appRouter = router({
   careTeam: careTeamRouter,
   alerts: alertsRouter,
   aiSummaries: aiSummariesRouter,
+  admin: adminRouter,
 });
 
 // Export the type — the mobile app imports this for type-safe API calls

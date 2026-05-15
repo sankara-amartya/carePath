@@ -1,51 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking, Animated } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, spacing, border } from '../theme';
 import { usePermissions, Action } from '../hooks/usePermissions';
+import { trpc } from '../trpc/client';
+import { usePatient } from '../context/PatientContext';
 
 export default function SummaryScreen() {
   const { can } = usePermissions();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [summaryText, setSummaryText] = useState("");
+  const { patientId } = usePatient();
   const shimmerAnim = new Animated.Value(0.3);
 
+  const utils = trpc.useUtils();
+
+  // Fetch real data
+  const { data: latestSummary, isLoading: summaryLoading } = trpc.aiSummaries.latest.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId && can(Action.GENERATE_AI_SUMMARY) }
+  );
+
+  const { data: medications } = trpc.medications.list.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const { data: todayLogs } = trpc.medicationLogs.today.useQuery(
+    { patientId: patientId! },
+    { enabled: !!patientId }
+  );
+
+  const { data: checks } = trpc.healthChecks.list.useQuery(
+    { patientId: patientId!, days: 7 },
+    { enabled: !!patientId }
+  );
+
+  const { data: alerts } = trpc.alerts.list.useQuery(
+    { patientId: patientId!, resolved: false },
+    { enabled: !!patientId }
+  );
+
+  const generateMutation = trpc.aiSummaries.generate.useMutation({
+    onSuccess: () => utils.aiSummaries.latest.invalidate(),
+    onError: (err) => Alert.alert('Error', err.message),
+  });
+
+  // Compute real stats
+  const totalMeds = medications?.length ?? 0;
+  const takenCount = todayLogs?.filter(l => l.status === 'taken').length ?? 0;
+  const adherence = totalMeds > 0 ? Math.round((takenCount / totalMeds) * 100) : 0;
+
+  const avgPain = checks && checks.length > 0
+    ? (checks.reduce((sum, c) => sum + c.pain, 0) / checks.length).toFixed(1)
+    : '—';
+
+  const checkInCount = checks?.length ?? 0;
+  const alertCount = alerts?.length ?? 0;
+
+  // Week date range
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - 6);
+  const dateRange = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
   useEffect(() => {
-    if (loading) {
+    if (summaryLoading) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(shimmerAnim, {
-            toValue: 0.6,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(shimmerAnim, {
-            toValue: 0.3,
-            duration: 600,
-            useNativeDriver: true,
-          }),
+          Animated.timing(shimmerAnim, { toValue: 0.6, duration: 600, useNativeDriver: true }),
+          Animated.timing(shimmerAnim, { toValue: 0.3, duration: 600, useNativeDriver: true }),
         ])
       ).start();
-
-      // Mock SSE simulation
-      let text = "Dad has generally been adhering to his medication schedule, but we noticed a slight increase in reported pain levels on Thursday and Friday. His appetite remains stable, though his energy levels dropped slightly over the weekend. Overall, vitals are within normal range.";
-      let idx = 0;
-      
-      const interval = setInterval(() => {
-        if (idx < text.length) {
-          setSummaryText(prev => prev + text[idx]);
-          idx++;
-        } else {
-          setLoading(false);
-          clearInterval(interval);
-        }
-      }, 20);
-
-      return () => clearInterval(interval);
     }
-  }, [loading]);
+  }, [summaryLoading]);
+
+  const handleGenerate = () => {
+    if (!patientId) return;
+    const ws = weekStart.toISOString();
+    const we = now.toISOString();
+    generateMutation.mutate({ patientId, weekStart: ws, weekEnd: we });
+  };
 
   if (!can(Action.GENERATE_AI_SUMMARY)) {
     return (
@@ -63,8 +98,10 @@ export default function SummaryScreen() {
     );
   }
 
+  const summaryContent = latestSummary?.content ?? '';
+
   const handleShare = () => {
-    Linking.openURL('mailto:doctor@hospital.com?subject=Weekly Summary&body=' + encodeURIComponent(summaryText));
+    Linking.openURL('mailto:?subject=Weekly Health Summary&body=' + encodeURIComponent(summaryContent));
   };
 
   return (
@@ -76,67 +113,61 @@ export default function SummaryScreen() {
           </TouchableOpacity>
           <Text style={styles.title}>Weekly summary</Text>
         </View>
-        <TouchableOpacity style={styles.btnGhost}>
-          <Text style={styles.btnGhostText}>Generate</Text>
+        <TouchableOpacity
+          style={[styles.btnGhost, generateMutation.isPending && { opacity: 0.6 }]}
+          onPress={handleGenerate}
+          disabled={generateMutation.isPending}
+        >
+          <Text style={styles.btnGhostText}>{generateMutation.isPending ? 'Generating...' : 'Generate'}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.datePill}>
-          <Text style={styles.datePillText}>Apr 14 – Apr 21</Text>
+          <Text style={styles.datePillText}>{dateRange}</Text>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsStrip}>
           <View style={styles.statCard}>
-            <Text style={styles.statValMint}>94%</Text>
+            <Text style={styles.statValMint}>{adherence}%</Text>
             <Text style={styles.statLabel}>Adherence</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValGold}>3.8</Text>
+            <Text style={Number(avgPain) > 3 ? styles.statValGold : styles.statValMint}>{avgPain}</Text>
             <Text style={styles.statLabel}>Avg pain</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValMint}>7 / 7</Text>
+            <Text style={styles.statValMint}>{checkInCount} / 7</Text>
             <Text style={styles.statLabel}>Check-ins</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValAlert}>1</Text>
+            <Text style={alertCount > 0 ? styles.statValAlert : styles.statValMint}>{alertCount}</Text>
             <Text style={styles.statLabel}>Alerts</Text>
           </View>
         </ScrollView>
 
         <View style={styles.aiCard}>
           <Text style={styles.aiLabel}>AI SUMMARY</Text>
-          {loading && summaryText.length === 0 ? (
+          {summaryLoading || generateMutation.isPending ? (
             <View>
               <Animated.View style={[styles.shimmerLine, { opacity: shimmerAnim, width: '100%' }]} />
               <Animated.View style={[styles.shimmerLine, { opacity: shimmerAnim, width: '85%' }]} />
               <Animated.View style={[styles.shimmerLine, { opacity: shimmerAnim, width: '60%' }]} />
             </View>
+          ) : summaryContent ? (
+            <Text style={styles.aiText}>{summaryContent}</Text>
           ) : (
-            <Text style={styles.aiText}>
-              {summaryText}
-              {loading && <Text style={{color: colors.mint}}>|</Text>}
+            <Text style={[styles.aiText, { color: colors.muted }]}>
+              No summary generated yet. Tap "Generate" to create one.
             </Text>
           )}
         </View>
 
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Text style={styles.shareBtnText}>Share with doctor</Text>
-        </TouchableOpacity>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Medications</Text>
-          <Text style={styles.bullet}>• Metformin 500mg: Missed 1 dose (Tue)</Text>
-          <Text style={styles.bullet}>• Lisinopril 10mg: 100% adherence</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Health trends</Text>
-          <Text style={styles.bullet}>• Pain level increased from 2 to 4</Text>
-          <Text style={styles.bullet}>• Mobility reported as consistently good</Text>
-        </View>
-
+        {summaryContent ? (
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <Text style={styles.shareBtnText}>Share with doctor</Text>
+          </TouchableOpacity>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { trpc } from '@/lib/trpc';
 import { usePatient } from '@/context/PatientContext';
+import { Heart, Shield, Users, Loader2, ArrowRight } from 'lucide-react';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -16,17 +17,28 @@ export default function OnboardingPage() {
   const [conditions, setConditions] = useState('');
   const [contact, setContact] = useState('');
 
+  // Check if user already has patients (handle stuck state)
+  const { data: existingPatients, isLoading: checkingExisting } = trpc.patients.listForUser.useQuery(
+    undefined,
+    { enabled: isLoaded === true }
+  );
+
+  // If user already has patients, auto-redirect to dashboard
+  useEffect(() => {
+    if (existingPatients && existingPatients.length > 0) {
+      setPatientId(existingPatients[0].id);
+      router.replace('/');
+    }
+  }, [existingPatients, setPatientId, router]);
+
   const createPatient = trpc.patients.create.useMutation({
     onSuccess: async (data) => {
-      // 1. Set the newly created patient as the active patient in localStorage/Context
       setPatientId(data.id);
-      
-      // 2. Reload the Clerk user session so the frontend gets the new publicMetadata.role
-      if (user) {
-        await user.reload();
+      try {
+        if (user) await user.reload();
+      } catch {
+        // Non-critical — PatientContext will handle patient selection
       }
-      
-      // 3. Redirect to the dashboard home
       router.push('/');
     }
   });
@@ -43,84 +55,103 @@ export default function OnboardingPage() {
     });
   };
 
-  if (!isLoaded) return null;
+  if (!isLoaded || checkingExisting) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--ink)' }}>
+        <Loader2 size={32} className="animate-spin" color="var(--mint)" />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--ink)' }}>
-      <div style={{ maxWidth: '480px', width: '100%', padding: '2rem' }}>
-        <h1 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: '32px', marginBottom: '8px', textAlign: 'center' }}>
-          Welcome to CarePath
-        </h1>
-        <p style={{ color: 'var(--muted)', textAlign: 'center', marginBottom: '2rem', lineHeight: '1.5' }}>
-          Let's set up a care profile for the person you are looking after. You will automatically become the Primary Caregiver.
-        </p>
+    <div className="onboarding-page">
+      <div className="onboarding-glow" />
 
-        <form onSubmit={handleSubmit} className="card-feat" style={{ padding: '2rem' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-on-dark)' }}>
-              Patient Name *
-            </label>
-            <input 
-              required
-              className="inp" 
-              placeholder="e.g. John Smith or 'Dad'" 
-              value={name}
-              onChange={e => setName(e.target.value)}
-            />
+      <div className="onboarding-container">
+        {/* Left: Branding */}
+        <div className="onboarding-hero">
+          <div className="onboarding-logo">
+            <Heart size={28} color="var(--mint)" />
           </div>
+          <h1 className="onboarding-title">
+            Welcome to<br /><em>CarePath</em>
+          </h1>
+          <p className="onboarding-subtitle">
+            Set up a care profile for the person you&apos;re looking after. You&apos;ll become their Primary Caregiver.
+          </p>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-on-dark)' }}>
-              Date of Birth *
-            </label>
-            <input 
-              required
-              type="date"
-              className="inp" 
-              value={dob}
-              onChange={e => setDob(e.target.value)}
-            />
+          <div className="onboarding-features">
+            <div className="onboarding-feature">
+              <div className="onboarding-feature-icon" style={{ background: 'rgba(93,202,165,0.12)' }}>
+                <Heart size={16} color="var(--mint)" />
+              </div>
+              <div>
+                <div className="onboarding-feature-title">Track health daily</div>
+                <div className="onboarding-feature-desc">Log vitals, mood, and pain levels with simple check-ins</div>
+              </div>
+            </div>
+            <div className="onboarding-feature">
+              <div className="onboarding-feature-icon" style={{ background: 'rgba(201,148,58,0.12)' }}>
+                <Shield size={16} color="var(--gold)" />
+              </div>
+              <div>
+                <div className="onboarding-feature-title">Medication management</div>
+                <div className="onboarding-feature-desc">Never miss a dose with scheduling and photo verification</div>
+              </div>
+            </div>
+            <div className="onboarding-feature">
+              <div className="onboarding-feature-icon" style={{ background: 'rgba(93,202,165,0.12)' }}>
+                <Users size={16} color="var(--mint)" />
+              </div>
+              <div>
+                <div className="onboarding-feature-title">Care team coordination</div>
+                <div className="onboarding-feature-desc">Invite family, doctors, and caregivers to collaborate</div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-on-dark)' }}>
-              Pre-existing Conditions (Optional)
-            </label>
-            <input 
-              className="inp" 
-              placeholder="e.g. Hypertension, Arthritis (comma separated)" 
-              value={conditions}
-              onChange={e => setConditions(e.target.value)}
-            />
-          </div>
-
-          <div style={{ marginBottom: '2rem' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-on-dark)' }}>
-              Emergency Contact (Optional)
-            </label>
-            <input 
-              className="inp" 
-              placeholder="Name and Phone Number" 
-              value={contact}
-              onChange={e => setContact(e.target.value)}
-            />
-          </div>
-
-          {createPatient.isError && (
-            <p style={{ color: 'var(--alert)', fontSize: '13px', marginBottom: '1rem' }}>
-              {createPatient.error.message}
+        {/* Right: Form */}
+        <div className="onboarding-form-wrap">
+          <form onSubmit={handleSubmit} className="onboarding-form">
+            <h2 style={{ fontFamily: 'var(--font-dm-serif)', fontSize: '22px', marginBottom: '4px' }}>
+              Patient details
+            </h2>
+            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '28px', lineHeight: 1.5 }}>
+              You can add more patients later from the sidebar.
             </p>
-          )}
 
-          <button 
-            type="submit" 
-            className="btn-primary" 
-            disabled={createPatient.isPending}
-            style={{ width: '100%', justifyContent: 'center', padding: '16px' }}
-          >
-            {createPatient.isPending ? 'Creating profile...' : 'Create Patient Profile'}
-          </button>
-        </form>
+            <div className="form-group">
+              <label className="form-label">Patient name *</label>
+              <input required className="inp" placeholder="e.g. John Smith or 'Mom'" value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Date of birth *</label>
+              <input required type="date" className="inp" value={dob} onChange={e => setDob(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Pre-existing conditions</label>
+              <input className="inp" placeholder="e.g. Hypertension, Arthritis (comma separated)" value={conditions} onChange={e => setConditions(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Emergency contact</label>
+              <input className="inp" placeholder="Name — Phone number" value={contact} onChange={e => setContact(e.target.value)} />
+            </div>
+
+            {createPatient.isError && (
+              <div className="form-error">{createPatient.error.message}</div>
+            )}
+
+            <button type="submit" className="btn-primary" disabled={createPatient.isPending}
+              style={{ width: '100%', justifyContent: 'center', padding: '14px', marginTop: '8px', fontSize: '14px' }}>
+              {createPatient.isPending ? (
+                <><Loader2 size={16} className="animate-spin" /> Creating profile…</>
+              ) : (
+                <>Get started <ArrowRight size={16} /></>
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

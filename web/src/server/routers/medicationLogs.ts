@@ -15,10 +15,13 @@ export const medicationLogsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUniqueOrThrow({
+        where: { clerkId: ctx.userId },
+      });
       return ctx.db.medicationLog.create({
         data: {
           ...input,
-          loggedById: ctx.userId,
+          loggedById: user.id,
         },
       });
     }),
