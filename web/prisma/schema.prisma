@@ -24,7 +24,7 @@ model User {
 
   // Relations
   careTeamMembers CareTeamMember[]
-  medicationLogs  MedicationLog[]
+  medicationLogs  MedicationLog[]Z
   healthChecks    HealthCheck[]
   resolvedAlerts  Alert[]          @relation("ResolvedBy")
   auditLogs       AuditLog[]

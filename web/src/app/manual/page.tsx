@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Play, PlayCircle, BookOpen, Users, Activity, Pill, ShieldAlert } from 'lucide-react';
+import { Play, PlayCircle, BookOpen, Users, Activity, Pill, ShieldAlert, Loader2 } from 'lucide-react';
 
 type VideoSection = {
   id: string;
